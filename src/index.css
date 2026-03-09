@@ -1,0 +1,146 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+
+    /* Custom Tokens */
+    --attendance-present: 142 71% 45%;
+    --attendance-absent: 0 84.2% 60.2%;
+    --attendance-late: 45 93% 47%;
+
+    --shadow-elegant: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --gradient-subtle: linear-gradient(135deg, hsl(var(--background)), hsl(var(--muted)));
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Calendar Custom Styles */
+  .rdp-vhidden {
+    @apply hidden;
+  }
+
+  /* Hide the duplicate caption label when using dropdowns */
+  .rdp-caption_label {
+    @apply hidden;
+  }
+
+  /* Dropdown container */
+  .rdp-caption_dropdowns {
+    @apply flex gap-2 w-full justify-center items-center px-2;
+    margin-left: 0 !important;
+    /* Override potential library margins */
+  }
+
+  /* Individual Dropdown Wrappers */
+  .rdp-dropdown_year,
+  .rdp-dropdown_month {
+    @apply relative inline-flex items-center;
+  }
+
+  /* The Select Element Itself */
+  .rdp-dropdown {
+    @apply appearance-none bg-transparent border border-input rounded-md px-3 py-1 text-sm shadow-sm hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer h-8;
+  }
+
+  /* Navigation Buttons Position */
+  .rdp-nav {
+    @apply absolute right-2 top-2 h-7 w-auto flex gap-1 items-center justify-center p-0 !important;
+  }
+
+  .rdp-nav_button {
+    @apply h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 flex items-center justify-center border border-input rounded-md shadow-sm;
+  }
+
+  /* Ensure header cells (weekdays) align with day cells */
+  .rdp-head_row {
+    @apply flex w-full mt-2;
+  }
+
+  .rdp-head_cell {
+    @apply text-muted-foreground font-normal text-[0.8rem] w-9 h-9 flex items-center justify-center text-center;
+  }
+
+  /* Ensure rows align */
+  .rdp-row {
+    @apply flex w-full mt-2;
+  }
+
+  /* Ensure detail cells align */
+  .rdp-cell {
+    @apply h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20;
+  }
+
+  .rdp-day {
+    @apply h-9 w-9 p-0 font-normal aria-selected:opacity-100 flex items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground;
+  }
+}
