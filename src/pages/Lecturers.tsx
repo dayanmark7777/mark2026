@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { format, parseISO, isToday, isFuture } from "date-fns";
 import {
   Users,
@@ -81,6 +82,7 @@ export function Lecturers() {
     useSchedules();
   const deleteLecturer = useDeleteLecturer();
   const deleteSchedule = useDeleteSchedule();
+  const isMobile = useIsMobile();
 
   const [activeTab, setActiveTab] = useState("lecturers");
   const [searchTerm, setSearchTerm] = useState("");
@@ -131,9 +133,9 @@ export function Lecturers() {
   const avgSubjects =
     lecturers.length > 0
       ? Math.round(
-          lecturers.reduce((acc, l) => acc + (l.subjects?.length || 0), 0) /
-            lecturers.length,
-        )
+        lecturers.reduce((acc, l) => acc + (l.subjects?.length || 0), 0) /
+        lecturers.length,
+      )
       : 0;
 
   const todaySchedulesCount = schedules.filter((s) =>
@@ -162,23 +164,24 @@ export function Lecturers() {
     <div className="space-y-6 animate-in fade-in-50 pb-10">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-br from-foreground to-muted-foreground bg-clip-text text-transparent">
             Lecturer Management
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground mt-1">
             Manage lecturers, assignments, and class schedules
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button
-            onClick={() => {
-              setEditingLecturer(null);
-              setIsAddLecturerOpen(true);
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" /> Add Lecturer
-          </Button>
-        </div>
+        <Button
+          size={isMobile ? "sm" : "default"}
+          className="w-full sm:w-auto gap-2 shadow-md hover:shadow-lg transition-all"
+          onClick={() => {
+            setEditingLecturer(null);
+            setIsAddLecturerOpen(true);
+          }}
+        >
+          <Plus className="h-4 w-4" />
+          <span className={isMobile ? "text-xs" : ""}>Add Lecturer</span>
+        </Button>
       </div>
 
       <Tabs
@@ -199,133 +202,126 @@ export function Lecturers() {
         </TabsList>
 
         <TabsContent value="lecturers" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="hover:shadow-md transition-shadow">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Total Lecturers
+                <CardTitle className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Total
                 </CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+                <Users className="h-4 w-4 text-primary/60" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{lecturers.length}</div>
-                <p className="text-xs text-muted-foreground">
+                <div className="text-xl sm:text-2xl font-bold">{lecturers.length}</div>
+                <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">
                   {lecturers.filter((l) => l.status === "Active").length} Active
                 </p>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="hover:shadow-md transition-shadow">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Active Rate
+                <CardTitle className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Active %
                 </CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+                <Users className="h-4 w-4 text-green-600/60" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
+                <div className="text-xl sm:text-2xl font-bold text-green-600">
                   {lecturers.length > 0
                     ? Math.round(
-                        (lecturers.filter((l) => l.status === "Active").length /
-                          lecturers.length) *
-                          100,
-                      )
+                      (lecturers.filter((l) => l.status === "Active").length /
+                        lecturers.length) *
+                      100,
+                    )
                     : 0}
                   %
                 </div>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="hover:shadow-md transition-shadow">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Unique Subjects
+                <CardTitle className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Subjects
                 </CardTitle>
-                <BookOpen className="h-4 w-4 text-muted-foreground" />
+                <BookOpen className="h-4 w-4 text-blue-600/60" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{totalSubjects}</div>
+                <div className="text-xl sm:text-2xl font-bold text-blue-600">{totalSubjects}</div>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="hover:shadow-md transition-shadow">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Avg Subjects/Lecturer
+                <CardTitle className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Avg Expert
                 </CardTitle>
-                <BookOpen className="h-4 w-4 text-muted-foreground" />
+                <BookOpen className="h-4 w-4 text-purple-600/60" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{avgSubjects}</div>
+                <div className="text-xl sm:text-2xl font-bold text-purple-600">{avgSubjects}</div>
               </CardContent>
             </Card>
           </div>
 
           <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
+            <CardHeader className="pb-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                   <CardTitle>Lecturers Directory</CardTitle>
-                  <CardDescription>
-                    List of all registered lecturers and their expertise
-                  </CardDescription>
+                  {!isMobile && (
+                    <CardDescription>
+                      List of all registered lecturers and their expertise
+                    </CardDescription>
+                  )}
                 </div>
-                <div className="relative w-64">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search lecturers..."
-                    className="pl-8"
+                    className="pl-10 w-full"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Lecturer</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Subjects</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {isLoadingLecturers ? (
+            <CardContent className="p-0 sm:p-6">
+              {isLoadingLecturers ? (
+                <div className="text-center py-12 text-muted-foreground">Loading lecturers...</div>
+              ) : filteredLecturers.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-lg mx-4 sm:mx-0">
+                  No lecturers found matching your search.
+                </div>
+              ) : !isMobile ? (
+                <div className="rounded-md border overflow-hidden">
+                  <Table>
+                    <TableHeader className="bg-muted/50">
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center h-24">
-                          Loading lecturers...
-                        </TableCell>
+                        <TableHead>Lecturer</TableHead>
+                        <TableHead>Contact</TableHead>
+                        <TableHead>Subjects</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
-                    ) : filteredLecturers.length === 0 ? (
-                      <TableRow>
-                        <TableCell
-                          colSpan={5}
-                          className="text-center h-24 text-muted-foreground"
-                        >
-                          No lecturers found matching your search.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredLecturers.map((lecturer) => (
-                        <TableRow key={lecturer.id}>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredLecturers.map((lecturer) => (
+                        <TableRow key={lecturer.id} className="hover:bg-muted/30 transition-colors">
                           <TableCell>
                             <div className="flex items-center gap-3">
-                              <Avatar className="h-9 w-9">
-                                <AvatarFallback>
+                              <Avatar className="h-9 w-9 border">
+                                <AvatarFallback className="bg-primary/5 text-primary">
                                   {lecturer.name.charAt(0)}
                                 </AvatarFallback>
                               </Avatar>
-                              <div className="font-medium">{lecturer.name}</div>
+                              <div className="font-semibold">{lecturer.name}</div>
                             </div>
                           </TableCell>
                           <TableCell>
-                            <div className="flex flex-col text-sm text-neutral-600">
-                              <span className="flex items-center gap-1">
+                            <div className="flex flex-col text-sm text-neutral-600 space-y-0.5">
+                              <span className="flex items-center gap-1.5 hover:text-primary transition-colors cursor-pointer">
                                 <Mail className="h-3 w-3" /> {lecturer.email}
                               </span>
                               {lecturer.phone && (
-                                <span className="flex items-center gap-1">
+                                <span className="flex items-center gap-1.5 hover:text-primary transition-colors cursor-pointer">
                                   <Phone className="h-3 w-3" /> {lecturer.phone}
                                 </span>
                               )}
@@ -339,7 +335,7 @@ export function Lecturers() {
                                   <Badge
                                     key={i}
                                     variant="secondary"
-                                    className="text-[10px] px-1 py-0 h-5"
+                                    className="text-[10px] px-2 py-0 h-5"
                                   >
                                     {subject}
                                   </Badge>
@@ -347,21 +343,22 @@ export function Lecturers() {
                               {(lecturer.subjects || []).length > 3 && (
                                 <Badge
                                   variant="outline"
-                                  className="text-[10px] px-1 py-0 h-5"
+                                  className="text-[10px] px-2 py-0 h-5 border-dashed"
                                 >
                                   +{(lecturer.subjects?.length || 0) - 3} more
                                 </Badge>
                               )}
                               {(!lecturer.subjects ||
                                 lecturer.subjects.length === 0) && (
-                                <span className="text-muted-foreground text-sm">
-                                  -
-                                </span>
-                              )}
+                                  <span className="text-muted-foreground text-xs italic">
+                                    No subjects assigned
+                                  </span>
+                                )}
                             </div>
                           </TableCell>
                           <TableCell>
                             <Badge
+                              className={lecturer.status === "Active" ? "bg-green-100 text-green-700 hover:bg-green-100" : ""}
                               variant={
                                 lecturer.status === "Active"
                                   ? "default"
@@ -374,101 +371,190 @@ export function Lecturers() {
                           <TableCell className="text-right">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted">
                                   <span className="sr-only">Open menu</span>
                                   <MoreHorizontal className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
+                              <DropdownMenuContent align="end" className="w-48">
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                 <DropdownMenuItem
                                   onClick={() => setViewingLecturer(lecturer)}
+                                  className="gap-2"
                                 >
-                                  <Eye className="mr-2 h-4 w-4" /> View Details
+                                  <Eye className="h-4 w-4" /> View Details
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleEditLecturer(lecturer)}
+                                  className="gap-2"
                                 >
-                                  <Edit className="mr-2 h-4 w-4" /> Edit
+                                  <Edit className="h-4 w-4" /> Edit
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() =>
                                     handleCreateSchedule(lecturer.id)
                                   }
+                                  className="gap-2"
                                 >
-                                  <CalendarDays className="mr-2 h-4 w-4" />{" "}
+                                  <CalendarDays className="h-4 w-4" />{" "}
                                   Schedule Class
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
-                                  className="text-destructive focus:text-destructive"
+                                  className="text-destructive focus:text-destructive gap-2"
                                   onClick={() =>
                                     setLecturerToDelete(lecturer.id)
                                   }
                                 >
-                                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                  <Trash2 className="h-4 w-4" /> Delete
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </TableCell>
                         </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4 p-4">
+                  {filteredLecturers.map((lecturer) => (
+                    <Card key={lecturer.id} className="group overflow-hidden border border-border/50 hover:border-primary/30 hover:shadow-md transition-all duration-300">
+                      <div className={`h-1.5 w-full ${lecturer.status === 'Active' ? 'bg-green-500' : 'bg-muted'}`} />
+                      <CardContent className="p-4 space-y-4">
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
+                              <AvatarFallback className="bg-primary/5 text-primary text-sm font-bold">
+                                {lecturer.name.charAt(0)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="space-y-0.5 min-w-0">
+                              <h3 className="font-bold text-lg leading-tight truncate">
+                                {lecturer.name}
+                              </h3>
+                              <Badge className={`text-[10px] h-4 font-bold uppercase ${lecturer.status === 'Active' ? 'bg-green-100 text-green-700' : ''}`} variant={lecturer.status === 'Active' ? 'default' : 'secondary'}>
+                                {lecturer.status}
+                              </Badge>
+                            </div>
+                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 -mt-1 -mr-1">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEditLecturer(lecturer)}>
+                                <Edit className="mr-2 h-4 w-4 text-muted-foreground" /> Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleCreateSchedule(lecturer.id)}>
+                                <CalendarDays className="mr-2 h-4 w-4 text-muted-foreground" /> Schedule
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem className="text-destructive" onClick={() => setLecturerToDelete(lecturer.id)}>
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-2 bg-muted/30 p-3 rounded-lg border border-border/30 text-sm">
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Mail className="h-3.5 w-3.5 shrink-0" />
+                            <span className="truncate">{lecturer.email}</span>
+                          </div>
+                          {lecturer.phone && (
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Phone className="h-3.5 w-3.5 shrink-0" />
+                              <span>{lecturer.phone}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1 flex items-center gap-1">
+                            <BookOpen className="w-3 h-3" /> Expertise
+                          </p>
+                          <div className="flex flex-wrap gap-1">
+                            {(lecturer.subjects || []).slice(0, 4).map((subject, i) => (
+                              <Badge key={i} variant="secondary" className="text-[9px] py-0 px-2 bg-background border">
+                                {subject}
+                              </Badge>
+                            ))}
+                            {(lecturer.subjects || []).length > 4 && (
+                              <Badge variant="outline" className="text-[9px] py-0 px-2 border-dashed">
+                                +{(lecturer.subjects?.length || 0) - 4} more
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+
+                        <Button
+                          className="w-full gap-2 font-bold shadow-sm mt-2"
+                          size="sm"
+                          onClick={() => setViewingLecturer(lecturer)}
+                        >
+                          <Eye className="w-4 h-4" />
+                          View Full Profile
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="schedule" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="hover:shadow-md transition-shadow">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Available Lecturers
+                <CardTitle className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Available
                 </CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+                <Users className="h-4 w-4 text-primary/60" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
+                <div className="text-xl sm:text-2xl font-bold">
                   {activeLecturers.length}
                 </div>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="hover:shadow-md transition-shadow">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Upcoming Classes
+                <CardTitle className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Upcoming
                 </CardTitle>
-                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <Calendar className="h-4 w-4 text-green-600/60" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
+                <div className="text-xl sm:text-2xl font-bold text-green-600">
                   {upcomingSchedules.length}
                 </div>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="hover:shadow-md transition-shadow">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Today's Classes
+                <CardTitle className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Today
                 </CardTitle>
-                <Clock className="h-4 w-4 text-muted-foreground" />
+                <Clock className="h-4 w-4 text-blue-600/60" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{todaySchedulesCount}</div>
+                <div className="text-xl sm:text-2xl font-bold text-blue-600">{todaySchedulesCount}</div>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="hover:shadow-md transition-shadow">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Total Subjects
+                <CardTitle className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Disciplines
                 </CardTitle>
-                <BookOpen className="h-4 w-4 text-muted-foreground" />
+                <BookOpen className="h-4 w-4 text-purple-600/60" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{totalSubjects}</div>
+                <div className="text-xl sm:text-2xl font-bold text-purple-600">{totalSubjects}</div>
               </CardContent>
             </Card>
           </div>
@@ -520,97 +606,161 @@ export function Lecturers() {
               </CardContent>
             </Card>
 
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle>Upcoming Schedules</CardTitle>
-                <CardDescription>
-                  Scheduled classes for all lecturers
-                </CardDescription>
+            <Card className="lg:col-span-2 overflow-hidden">
+              <CardHeader className="pb-4">
+                <div>
+                  <CardTitle>Upcoming Schedules</CardTitle>
+                  {!isMobile && (
+                    <CardDescription>
+                      Scheduled classes for all lecturers
+                    </CardDescription>
+                  )}
+                </div>
               </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date & Time</TableHead>
-                      <TableHead>Class</TableHead>
-                      <TableHead>Lecturer</TableHead>
-                      <TableHead>Location</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {isLoadingSchedules ? (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center h-24">
-                          Loading schedules...
-                        </TableCell>
-                      </TableRow>
-                    ) : upcomingSchedules.length === 0 ? (
-                      <TableRow>
-                        <TableCell
-                          colSpan={5}
-                          className="text-center h-24 text-muted-foreground"
-                        >
-                          No upcoming scheduled classes found.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      upcomingSchedules.map((schedule) => (
-                        <TableRow key={schedule.id}>
-                          <TableCell>
-                            <div className="flex flex-col">
-                              <span className="font-medium">
-                                {format(
-                                  new Date(schedule.scheduled_date),
-                                  "MMM d, yyyy",
-                                )}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {schedule.start_time.slice(0, 5)} -{" "}
-                                {schedule.end_time.slice(0, 5)}
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell>{schedule.classes?.name}</TableCell>
-                          <TableCell>{schedule.lecturers?.name}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <MapPin className="h-3 w-3" />
-                              {schedule.location || "N/A"}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={() => setViewingSchedule(schedule)}
-                                title="View Details"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={() => handleEditSchedule(schedule)}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="text-destructive"
-                                onClick={() => setScheduleToDelete(schedule.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
+              <CardContent className="p-0 sm:p-6">
+                {isLoadingSchedules ? (
+                  <div className="text-center py-12 text-muted-foreground">Loading schedules...</div>
+                ) : upcomingSchedules.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-lg mx-4 sm:mx-0">
+                    No upcoming scheduled classes found.
+                  </div>
+                ) : !isMobile ? (
+                  <div className="overflow-x-auto border rounded-md">
+                    <Table>
+                      <TableHeader className="bg-muted/50">
+                        <TableRow>
+                          <TableHead>Date & Time</TableHead>
+                          <TableHead>Class</TableHead>
+                          <TableHead>Lecturer</TableHead>
+                          <TableHead>Location</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {upcomingSchedules.map((schedule) => (
+                          <TableRow key={schedule.id} className="hover:bg-muted/30 transition-colors">
+                            <TableCell>
+                              <div className="flex flex-col">
+                                <span className="font-semibold">
+                                  {format(
+                                    new Date(schedule.scheduled_date),
+                                    "MMM d, yyyy",
+                                  )}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {schedule.start_time.slice(0, 5)} -{" "}
+                                  {schedule.end_time.slice(0, 5)}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="font-medium">{schedule.classes?.name}</TableCell>
+                            <TableCell>{schedule.lecturers?.name}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1.5 text-sm text-neutral-600">
+                                <MapPin className="h-3.5 w-3.5 text-primary/60" />
+                                {schedule.location || "N/A"}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-1">
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                                  onClick={() => setViewingSchedule(schedule)}
+                                  title="View Details"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                                  onClick={() => handleEditSchedule(schedule)}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                  onClick={() => setScheduleToDelete(schedule.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-4 p-4">
+                    {upcomingSchedules.map((schedule) => (
+                      <Card key={schedule.id} className="overflow-hidden border border-border/50 hover:border-primary/30 hover:shadow-md transition-all duration-300">
+                        <div className="h-1 w-full bg-primary/20" />
+                        <CardContent className="p-4 space-y-4">
+                          <div className="flex justify-between items-start gap-4">
+                            <div className="space-y-1 min-w-0">
+                              <h4 className="font-bold text-base truncate">
+                                {schedule.classes?.name || 'Untitled Class'}
+                              </h4>
+                              <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-tight">
+                                <Calendar className="h-3 w-3" />
+                                {format(new Date(schedule.scheduled_date), "MMM d, yyyy")}
+                              </div>
+                            </div>
+                            <Badge variant="outline" className="shrink-0 text-[10px] bg-primary/5 border-primary/20 text-primary">
+                              {schedule.start_time.slice(0, 5)} - {schedule.end_time.slice(0, 5)}
+                            </Badge>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3 bg-muted/30 p-3 rounded-lg border border-border/30">
+                            <div className="space-y-1">
+                              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Lecturer</p>
+                              <p className="text-sm font-semibold truncate">{schedule.lecturers?.name}</p>
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Location</p>
+                              <div className="flex items-center gap-1">
+                                <MapPin className="h-3 w-3 text-primary/60" />
+                                <span className="text-sm font-semibold truncate">{schedule.location || 'N/A'}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2 pt-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1 font-bold text-xs"
+                              onClick={() => setViewingSchedule(schedule)}
+                            >
+                              Details
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                              onClick={() => handleEditSchedule(schedule)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => setScheduleToDelete(schedule.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -627,22 +777,24 @@ export function Lecturers() {
           }
         }}
       >
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {editingLecturer ? "Edit Lecturer" : "Add New Lecturer"}
-            </DialogTitle>
-            <DialogDescription>
-              {editingLecturer
-                ? "Update lecturer details and expertise."
-                : "Enter the details for the new lecturer."}
-            </DialogDescription>
-          </DialogHeader>
-          <AddLecturerForm
-            initialData={editingLecturer || undefined}
-            onSuccess={() => setIsAddLecturerOpen(false)}
-            onCancel={() => setIsAddLecturerOpen(false)}
-          />
+        <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[95vh] overflow-y-auto p-0 border-none sm:border-solid">
+          <div className="p-6">
+            <DialogHeader className="mb-6">
+              <DialogTitle className="text-2xl font-bold">
+                {editingLecturer ? "Edit Lecturer" : "Add New Lecturer"}
+              </DialogTitle>
+              <DialogDescription>
+                {editingLecturer
+                  ? "Update lecturer details and expertise."
+                  : "Enter the details for the new lecturer."}
+              </DialogDescription>
+            </DialogHeader>
+            <AddLecturerForm
+              initialData={editingLecturer || undefined}
+              onSuccess={() => setIsAddLecturerOpen(false)}
+              onCancel={() => setIsAddLecturerOpen(false)}
+            />
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -677,16 +829,15 @@ export function Lecturers() {
         </DialogContent>
       </Dialog>
 
-      {/* View Details Dialog */}
-      <Dialog
-        open={!!viewingLecturer}
-        onOpenChange={(open) => !open && setViewingLecturer(null)}
-      >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Lecturer Details</DialogTitle>
-          </DialogHeader>
-          {viewingLecturer && (
+      {viewingLecturer && (
+        <Dialog
+          open={!!viewingLecturer}
+          onOpenChange={(open) => !open && setViewingLecturer(null)}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Lecturer Details</DialogTitle>
+            </DialogHeader>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -733,7 +884,7 @@ export function Lecturers() {
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {viewingLecturer.subjects &&
-                  viewingLecturer.subjects.length > 0 ? (
+                    viewingLecturer.subjects.length > 0 ? (
                     viewingLecturer.subjects.map((sub, i) => (
                       <Badge key={i} variant="outline">
                         {sub}
@@ -755,9 +906,9 @@ export function Lecturers() {
                 </Button>
               </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Delete Confirmation */}
       <AlertDialog
@@ -819,20 +970,15 @@ export function Lecturers() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Schedule Details Dialog */}
-      <Dialog
-        open={!!viewingSchedule}
-        onOpenChange={(open) => {
-          if (!open) {
-            setViewingSchedule(null);
-          }
-        }}
-      >
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Schedule Details</DialogTitle>
-          </DialogHeader>
-          {viewingSchedule && (
+      {viewingSchedule && (
+        <Dialog
+          open={!!viewingSchedule}
+          onOpenChange={(open) => !open && setViewingSchedule(null)}
+        >
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Schedule Details</DialogTitle>
+            </DialogHeader>
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-6">
                 <div>
@@ -920,8 +1066,10 @@ export function Lecturers() {
                 </Button>
                 <Button
                   onClick={() => {
-                    handleEditSchedule(viewingSchedule);
-                    setViewingSchedule(null);
+                    if (viewingSchedule) {
+                      handleEditSchedule(viewingSchedule);
+                      setViewingSchedule(null);
+                    }
                   }}
                 >
                   <Edit className="h-4 w-4 mr-2" />
@@ -929,9 +1077,9 @@ export function Lecturers() {
                 </Button>
               </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
