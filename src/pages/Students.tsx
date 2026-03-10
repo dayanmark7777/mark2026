@@ -247,7 +247,7 @@ export function Students() {
     const { data: enrollmentsRaw } = await supabase
       .from("student_course_enrollments")
       .select("student_id, class_id");
-    
+
     const enrollments = enrollmentsRaw || [];
 
     // Create CSV content
@@ -480,7 +480,7 @@ export function Students() {
           );
           const districtNum = district?.match(/\d+/)?.[0] || "";
           const participationSuffix = partType === "Physical" ? "P" : "Z";
-          
+
           const generatedIndex = `${batchPart}${nicPart}${sumOfDigits}${districtNum}${participationSuffix}`;
 
           // If indexNum is missing or is a UUID, use generatedIndex
@@ -631,20 +631,23 @@ export function Students() {
 
   return (
     <div className="space-y-6 animate-in fade-in-50">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-tight">Students</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" className="gap-2" onClick={handleImport}>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-br from-foreground to-muted-foreground bg-clip-text text-transparent">Students</h1>
+          <p className="text-sm text-muted-foreground mt-1">Manage and track student enrollments</p>
+        </div>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Button variant="outline" size={isMobile ? "sm" : "default"} className="flex-1 sm:flex-none gap-2" onClick={handleImport}>
             <Upload className="w-4 h-4" />
-            Import
+            <span className={isMobile ? "text-xs" : ""}>Import</span>
           </Button>
-          <Button variant="outline" className="gap-2" onClick={handleExport}>
+          <Button variant="outline" size={isMobile ? "sm" : "default"} className="flex-1 sm:flex-none gap-2" onClick={handleExport}>
             <Download className="w-4 h-4" />
-            Export
+            <span className={isMobile ? "text-xs" : ""}>Export</span>
           </Button>
-          <Button className="gap-2" onClick={() => setIsAddDialogOpen(true)}>
+          <Button size={isMobile ? "sm" : "default"} className="flex-1 sm:flex-none gap-2 shadow-md hover:shadow-lg transition-all" onClick={() => setIsAddDialogOpen(true)}>
             <Plus className="w-4 h-4" />
-            Add Student
+            <span className={isMobile ? "text-xs" : ""}>Add Student</span>
           </Button>
         </div>
       </div>
@@ -661,34 +664,32 @@ export function Students() {
           {/* Search and Filters */}
           <div className="space-y-4">
             {/* Search Bar */}
-            <div className="flex gap-2">
-              <div className="flex-1 flex gap-2">
-                <Select value={searchType} onValueChange={setSearchType}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Fields</SelectItem>
-                    <SelectItem value="index">Index Number</SelectItem>
-                    <SelectItem value="name">Name</SelectItem>
-                    <SelectItem value="email">Email</SelectItem>
-                    <SelectItem value="district">District</SelectItem>
-                  </SelectContent>
-                </Select>
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search students..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Select value={searchType} onValueChange={setSearchType}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Fields</SelectItem>
+                  <SelectItem value="index">Index Number</SelectItem>
+                  <SelectItem value="name">Name</SelectItem>
+                  <SelectItem value="email">Email</SelectItem>
+                  <SelectItem value="district">District</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search students..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 w-full"
+                />
               </div>
             </div>
 
             {/* Advanced Filters */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-2">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder="Status" />
@@ -769,8 +770,8 @@ export function Students() {
                 </SelectContent>
               </Select>
 
-              <Button variant="outline" onClick={resetFilters}>
-                Reset Filters
+              <Button variant="ghost" onClick={resetFilters} className="text-muted-foreground hover:text-foreground">
+                Reset
               </Button>
             </div>
           </div>
@@ -853,13 +854,12 @@ export function Students() {
                             </TableCell>
                             <TableCell>
                               <span
-                                className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                  student.status === "Active"
+                                className={`px-2 py-1 rounded-full text-xs font-medium ${student.status === "Active"
                                     ? "bg-green-100 text-green-800"
                                     : student.status === "Completed"
                                       ? "bg-blue-100 text-blue-800"
                                       : "bg-gray-100 text-gray-800"
-                                }`}
+                                  }`}
                               >
                                 {student.status}
                               </span>
@@ -896,98 +896,101 @@ export function Students() {
                   </Table>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {paginatedStudents.map((student) => {
                     const course = courses.find(
                       (c) => c.id === student.academic_program,
                     );
                     return (
-                      <Card key={student.id} className="border border-muted">
-                        <CardContent className="p-4 space-y-3">
-                          <div className="flex justify-between items-start">
-                            <div className="space-y-1">
-                              <h3 className="font-bold text-base leading-tight">
+                      <Card key={student.id} className="group overflow-hidden border border-border/50 hover:border-primary/30 hover:shadow-md transition-all duration-300">
+                        <div className={`h-1.5 w-full ${student.status === "Active" ? "bg-green-500" : student.status === "Completed" ? "bg-primary" : "bg-muted"}`} />
+                        <CardContent className="p-4 space-y-4">
+                          <div className="flex justify-between items-start gap-4">
+                            <div className="space-y-1 min-w-0">
+                              <h3 className="font-bold text-lg leading-tight truncate">
                                 {student.full_name}
                               </h3>
-                              <p className="text-xs text-muted-foreground font-mono">
-                                {student.index_number}
-                              </p>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted font-mono font-medium text-muted-foreground">
+                                  {student.index_number}
+                                </span>
+                                <Badge variant="outline" className="text-[10px] font-normal py-0">
+                                  {student.participation_type}
+                                </Badge>
+                              </div>
                             </div>
                             <span
-                              className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                student.status === "Active"
-                                  ? "bg-green-100 text-green-800"
+                              className={`shrink-0 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${student.status === "Active"
+                                  ? "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400"
                                   : student.status === "Completed"
-                                    ? "bg-blue-100 text-blue-800"
-                                    : "bg-gray-100 text-gray-800"
-                              }`}
+                                    ? "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400"
+                                    : "bg-gray-100 text-gray-700 dark:bg-gray-500/10 dark:text-gray-400"
+                                }`}
                             >
                               {student.status}
                             </span>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div className="space-y-0.5">
+                          <div className="grid grid-cols-2 gap-4 bg-muted/30 p-3 rounded-lg border border-border/30">
+                            <div className="space-y-1">
                               <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
                                 District
                               </p>
-                              <p className="font-medium line-clamp-1">
+                              <p className="text-sm font-semibold truncate">
                                 {student.district}
                               </p>
                             </div>
-                            <div className="space-y-0.5">
+                            <div className="space-y-1">
                               <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
                                 Course
                               </p>
-                              <p className="font-medium line-clamp-1">
+                              <p className="text-sm font-semibold truncate">
                                 {course?.name || "-"}
                               </p>
                             </div>
-                            <div className="space-y-0.5">
+                            <div className="space-y-1">
                               <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
                                 Batch
                               </p>
-                              <p className="font-medium">
+                              <p className="text-sm font-semibold">
                                 {student.batch_number || "-"}
                               </p>
                             </div>
-                            <div className="space-y-0.5">
+                            <div className="space-y-1">
                               <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
-                                Participation
+                                WhatsApp
                               </p>
-                              <p className="font-medium">
-                                {student.participation_type}
+                              <p className="text-sm font-semibold">
+                                {student.whatsapp_number}
                               </p>
                             </div>
                           </div>
 
-                          <div className="pt-2 flex flex-col gap-2">
+                          <div className="pt-2 flex items-center justify-between gap-2">
                             <Button
-                              className="w-full gap-2 font-semibold"
-                              variant="outline"
+                              className="flex-1 gap-2 font-bold shadow-sm"
+                              size="sm"
                               onClick={() => handleViewStudent(student)}
                             >
                               <Eye className="w-4 h-4" />
                               View
                             </Button>
-                            <div className="flex gap-2">
+                            <div className="flex gap-1">
                               <Button
-                                className="flex-1 gap-2"
                                 variant="ghost"
-                                size="sm"
+                                size="icon"
+                                className="h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/10"
                                 onClick={() => handleEditStudent(student)}
                               >
                                 <Edit2 className="w-4 h-4" />
-                                Edit
                               </Button>
                               <Button
-                                className="flex-1 gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
                                 variant="ghost"
-                                size="sm"
+                                size="icon"
+                                className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                                 onClick={() => handleDeleteClick(student)}
                               >
                                 <Trash2 className="w-4 h-4" />
-                                Delete
                               </Button>
                             </div>
                           </div>
@@ -999,55 +1002,59 @@ export function Students() {
               )}
 
               {/* Pagination */}
-              <div className="flex items-center justify-between pt-4">
-                <div className="flex items-center gap-2">
-                  <Label>Rows per page:</Label>
-                  <Select
-                    value={rowsPerPage.toString()}
-                    onValueChange={(value) => {
-                      setRowsPerPage(Number(value));
-                      setCurrentPage(1);
-                    }}
-                  >
-                    <SelectTrigger className="w-[100px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="10">10</SelectItem>
-                      <SelectItem value="25">25</SelectItem>
-                      <SelectItem value="50">50</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <span className="text-sm text-muted-foreground">
-                    Showing {(currentPage - 1) * rowsPerPage + 1} to{" "}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t font-semibold">
+                <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs">Rows:</Label>
+                    <Select
+                      value={rowsPerPage.toString()}
+                      onValueChange={(value) => {
+                        setRowsPerPage(Number(value));
+                        setCurrentPage(1);
+                      }}
+                    >
+                      <SelectTrigger className="w-[70px] h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="10">10</SelectItem>
+                        <SelectItem value="25">25</SelectItem>
+                        <SelectItem value="50">50</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {(currentPage - 1) * rowsPerPage + 1}-
                     {Math.min(
                       currentPage * rowsPerPage,
                       filteredStudents.length,
                     )}{" "}
-                    of {filteredStudents.length} students
+                    of {filteredStudents.length}
                   </span>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex items-center gap-1">
                   <Button
                     variant="outline"
-                    size="sm"
+                    size="icon"
+                    className="h-8 w-8"
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
                   >
-                    Previous
+                    <ChevronUp className="-rotate-90 h-4 w-4" />
                   </Button>
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+
+                  <div className="flex items-center gap-1 mx-2">
+                    {Array.from({ length: Math.min(isMobile ? 3 : 5, totalPages) }, (_, i) => {
                       let pageNum;
-                      if (totalPages <= 5) {
+                      if (totalPages <= (isMobile ? 3 : 5)) {
                         pageNum = i + 1;
-                      } else if (currentPage <= 3) {
+                      } else if (currentPage <= 2) {
                         pageNum = i + 1;
-                      } else if (currentPage >= totalPages - 2) {
-                        pageNum = totalPages - 4 + i;
+                      } else if (currentPage >= totalPages - 1) {
+                        pageNum = totalPages - (isMobile ? 2 : 4) + i;
                       } else {
-                        pageNum = currentPage - 2 + i;
+                        pageNum = currentPage - (isMobile ? 1 : 2) + i;
                       }
 
                       return (
@@ -1057,6 +1064,7 @@ export function Students() {
                             currentPage === pageNum ? "default" : "outline"
                           }
                           size="sm"
+                          className="h-8 w-8 p-0 text-xs"
                           onClick={() => setCurrentPage(pageNum)}
                         >
                           {pageNum}
@@ -1064,15 +1072,17 @@ export function Students() {
                       );
                     })}
                   </div>
+
                   <Button
                     variant="outline"
-                    size="sm"
+                    size="icon"
+                    className="h-8 w-8"
                     onClick={() =>
                       setCurrentPage((p) => Math.min(totalPages, p + 1))
                     }
                     disabled={currentPage === totalPages}
                   >
-                    Next
+                    <ChevronUp className="rotate-90 h-4 w-4" />
                   </Button>
                 </div>
               </div>
