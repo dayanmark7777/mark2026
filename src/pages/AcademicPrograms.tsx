@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   useCourses,
   useCreateCourse,
@@ -96,6 +97,7 @@ export function AcademicPrograms() {
   const createCourse = useCreateCourse();
   const updateCourse = useUpdateCourse();
   const deleteCourse = useDeleteCourse();
+  const isMobile = useIsMobile();
 
   // --- Stats Calculation ---
   const stats = useMemo(() => {
@@ -217,16 +219,17 @@ export function AcademicPrograms() {
       {/* 3. Page Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Academic Programs</h1>
-          <p className="text-muted-foreground mt-1">Manage DBC academic programs and curriculum</p>
+          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-br from-foreground to-muted-foreground bg-clip-text text-transparent">Academic Programs</h1>
+          <p className="text-sm text-muted-foreground mt-1">Manage DBC academic programs and curriculum</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
           setIsDialogOpen(open);
           if (!open) setEditingCourse(undefined);
         }}>
           <DialogTrigger asChild>
-            <Button className="gap-2 shadow-lg hover:shadow-xl transition-all hover:scale-105">
-              <Plus className="h-4 w-4" /> Add Program
+            <Button size={isMobile ? "sm" : "default"} className="w-full sm:w-auto gap-2 shadow-md hover:shadow-lg transition-all">
+              <Plus className="h-4 w-4" />
+              <span className={isMobile ? "text-xs" : ""}>Add Program</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[95vh] overflow-y-auto p-0">
@@ -245,101 +248,96 @@ export function AcademicPrograms() {
       </div>
 
       {/* 5. Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Programs</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 text-muted-foreground">
+            <CardTitle className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">Total Programs</CardTitle>
+            <BookOpen className="h-4 w-4 text-primary/60" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-            <p className="text-xs text-muted-foreground mt-1">{stats.subtitle}</p>
+            <div className="text-xl sm:text-2xl font-bold">{stats.total}</div>
+            <p className="text-[10px] text-muted-foreground mt-1">{stats.subtitle}</p>
           </CardContent>
         </Card>
         <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Basic Programs</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 text-muted-foreground">
+            <CardTitle className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">Basic</CardTitle>
+            <Clock className="h-4 w-4 text-primary/60" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.basic}</div>
-            <p className="text-xs text-muted-foreground mt-1">Foundation level</p>
+            <div className="text-xl sm:text-2xl font-bold">{stats.basic}</div>
+            <p className="text-[10px] text-muted-foreground mt-1">Foundation level</p>
           </CardContent>
         </Card>
         <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Intermediate</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 text-muted-foreground">
+            <CardTitle className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">Intermediate</CardTitle>
+            <Users className="h-4 w-4 text-primary/60" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.intermediate}</div>
-            <p className="text-xs text-muted-foreground mt-1">Mid-level programs</p>
+            <div className="text-xl sm:text-2xl font-bold">{stats.intermediate}</div>
+            <p className="text-[10px] text-muted-foreground mt-1">Mid-level</p>
           </CardContent>
         </Card>
         <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Advanced Programs</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 text-muted-foreground">
+            <CardTitle className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">Advanced</CardTitle>
+            <BookOpen className="h-4 w-4 text-primary/60" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.advanced}</div>
-            <p className="text-xs text-muted-foreground mt-1">Advanced level</p>
+            <div className="text-xl sm:text-2xl font-bold">{stats.advanced}</div>
+            <p className="text-[10px] text-muted-foreground mt-1">Advanced level</p>
           </CardContent>
         </Card>
       </div>
 
       {/* 4. Search & Filter Bar */}
-      <Card className="p-4">
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="relative w-full md:w-1/3">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search programs by name, code, or type..."
-              className="pl-9"
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
-            />
-          </div>
-          <div className="flex gap-2 w-full md:w-auto items-center">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="outline" size="icon" onClick={handleSortToggle}>
-                    <SortAsc className={`h-4 w-4 transition-transform duration-200 ${sortOrder === 'desc' ? 'rotate-180' : ''}`} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Sort {sortOrder === 'asc' ? 'Ascending' : 'Descending'}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <div className="relative w-full sm:max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search programs..."
+            className="pl-10 w-full"
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+          />
+        </div>
+        <div className="flex gap-2 w-full sm:w-auto items-center">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="icon" className="h-10 w-10" onClick={handleSortToggle}>
+                  <SortAsc className={`h-4 w-4 transition-transform duration-200 ${sortOrder === 'desc' ? 'rotate-180' : ''}`} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Sort {sortOrder === 'asc' ? 'Ascending' : 'Descending'}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
-            <Select
-              value={typeFilter}
-              onValueChange={(val) => {
-                setTypeFilter(val);
-                setCurrentPage(1);
-              }}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="All Types" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="Basic">Basic</SelectItem>
-                <SelectItem value="Intermediate">Intermediate</SelectItem>
-                <SelectItem value="Advanced">Advanced</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <Select
+            value={typeFilter}
+            onValueChange={(val) => {
+              setTypeFilter(val);
+              setCurrentPage(1);
+            }}
+          >
+            <SelectTrigger className="w-full sm:w-[180px] h-10">
+              <SelectValue placeholder="All Types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="Basic">Basic</SelectItem>
+              <SelectItem value="Intermediate">Intermediate</SelectItem>
+              <SelectItem value="Advanced">Advanced</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <div className="mt-2 text-xs text-muted-foreground">
-          Showing {filteredAndSortedCourses.length} of {courses.length} programs
-        </div>
-      </Card>
+      </div>
 
       {/* 7. Content - Mobile Cards & Desktop Table */}
       {isLoading ? (
@@ -351,50 +349,61 @@ export function AcademicPrograms() {
       ) : (
         <>
           {/* Mobile View */}
-          <div className="grid gap-4 lg:hidden">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:hidden gap-4">
             {paginatedCourses.map((course) => (
-              <Card key={course.id} className="overflow-hidden hover:shadow-md transition-all duration-200">
-                <CardHeader className="pb-2">
+              <Card key={course.id} className="group overflow-hidden border border-border/50 hover:border-primary/30 hover:shadow-md transition-all duration-300">
+                <div className={`h-1.5 w-full ${course.type === 'Advanced' ? 'bg-purple-500' : course.type === 'Intermediate' ? 'bg-amber-500' : 'bg-primary'}`} />
+                <CardHeader className="p-4 pb-2">
                   <div className="flex justify-between items-start">
-                    <div className="space-y-1">
-                      <CardTitle className="text-base font-bold truncate pr-2">
+                    <div className="space-y-1 min-w-0">
+                      <CardTitle className="text-lg font-bold truncate pr-2">
                         {course.name}
                       </CardTitle>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Badge variant="outline" className="font-mono text-[10px]">{course.code}</Badge>
-                        <span className="flex items-center gap-1">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="font-mono text-[10px] py-0">{course.code}</Badge>
+                        <span className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium">
                           <Clock className="h-3 w-3" /> {course.duration}
                         </span>
                       </div>
                     </div>
-                    {getTypeIcon(course.type)}
+                    <div className="p-2 bg-muted/50 rounded-lg group-hover:scale-110 transition-transform">
+                      {getTypeIcon(course.type)}
+                    </div>
                   </div>
                 </CardHeader>
-                <CardContent className="pb-2">
-                  <div className="space-y-2">
+                <CardContent className="p-4 pt-2">
+                  <div className="space-y-3">
                     {course.levels && course.levels.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {course.levels[0].subjects.slice(0, 2).map((s, i) => (
-                          <Badge key={i} variant="secondary" className="text-[10px]">{s.name}</Badge>
-                        ))}
-                        {course.levels[0].subjects.length > 2 && (
-                          <Badge variant="outline" className="text-[10px]">+{course.levels[0].subjects.length - 2} more</Badge>
-                        )}
+                      <div className="bg-muted/30 p-2 rounded-lg border border-border/30">
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1.5 flex items-center gap-1">
+                          <Tag className="w-3 h-3" /> Sample Subjects
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {course.levels[0].subjects.slice(0, 3).map((s, i) => (
+                            <Badge key={i} variant="secondary" className="text-[9px] py-0 px-1.5 bg-background border">{s.name}</Badge>
+                          ))}
+                          {course.levels[0].subjects.length > 3 && (
+                            <span className="text-[9px] text-muted-foreground font-semibold px-1">+{course.levels[0].subjects.length - 3}</span>
+                          )}
+                        </div>
                       </div>
                     )}
+
+                    <div className="flex items-center justify-between gap-2 pt-1">
+                      <Button variant="default" size="sm" className="flex-1 font-bold shadow-sm" onClick={() => openViewDialog(course)}>
+                        <Eye className="h-4 w-4 mr-2" /> View
+                      </Button>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/10" onClick={() => openEditDialog(course)}>
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => openDeleteDialog(course)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
-                <div className="flex border-t divide-x">
-                  <Button variant="ghost" className="flex-1 rounded-none h-12" onClick={() => openViewDialog(course)}>
-                    <Eye className="h-4 w-4 mr-2" /> View
-                  </Button>
-                  <Button variant="ghost" className="flex-1 rounded-none h-12 hover:text-green-600" onClick={() => openEditDialog(course)}>
-                    <Edit2 className="h-4 w-4 mr-2" /> Edit
-                  </Button>
-                  <Button variant="ghost" className="flex-1 rounded-none h-12 hover:text-destructive" onClick={() => openDeleteDialog(course)}>
-                    <Trash2 className="h-4 w-4 mr-2" /> Delete
-                  </Button>
-                </div>
               </Card>
             ))}
           </div>
@@ -494,50 +503,56 @@ export function AcademicPrograms() {
 
       {/* 8. Pagination */}
       {totalPages > 1 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t pt-4">
-          <div className="text-sm text-muted-foreground w-full sm:w-auto text-center">
-            Page {currentPage} of {totalPages} ({filteredAndSortedCourses.length} programs)
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t pt-6 font-semibold">
+          <div className="text-xs text-muted-foreground w-full sm:w-auto text-center sm:text-left">
+            Page {currentPage} of {totalPages}
+            <span className="hidden sm:inline"> ({filteredAndSortedCourses.length} programs)</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <Button
               variant="outline"
               size="icon"
+              className="h-8 w-8"
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
 
-            {(() => {
-              const pages = [];
-              if (totalPages <= 5) {
-                for (let i = 1; i <= totalPages; i++) pages.push(i);
-              } else {
-                if (currentPage <= 3) {
-                  for (let i = 1; i <= 5; i++) pages.push(i);
-                } else if (currentPage >= totalPages - 2) {
-                  for (let i = totalPages - 4; i <= totalPages; i++) pages.push(i);
+            <div className="flex items-center gap-1 mx-1">
+              {(() => {
+                const maxPagesToShow = isMobile ? 3 : 5;
+                const pages = [];
+                if (totalPages <= maxPagesToShow) {
+                  for (let i = 1; i <= totalPages; i++) pages.push(i);
                 } else {
-                  for (let i = currentPage - 2; i <= currentPage + 2; i++) pages.push(i);
+                  if (currentPage <= Math.ceil(maxPagesToShow / 2)) {
+                    for (let i = 1; i <= maxPagesToShow; i++) pages.push(i);
+                  } else if (currentPage >= totalPages - Math.floor(maxPagesToShow / 2)) {
+                    for (let i = totalPages - (maxPagesToShow - 1); i <= totalPages; i++) pages.push(i);
+                  } else {
+                    for (let i = currentPage - Math.floor(maxPagesToShow / 2); i <= currentPage + Math.floor(maxPagesToShow / 2); i++) pages.push(i);
+                  }
                 }
-              }
 
-              return pages.map(p => (
-                <Button
-                  key={p}
-                  variant={currentPage === p ? "default" : "outline"}
-                  size="icon"
-                  className="w-9 h-9 transition-transform hover:scale-110"
-                  onClick={() => setCurrentPage(p)}
-                >
-                  {p}
-                </Button>
-              ));
-            })()}
+                return pages.map(p => (
+                  <Button
+                    key={p}
+                    variant={currentPage === p ? "default" : "outline"}
+                    size="sm"
+                    className="h-8 w-8 p-0 text-xs"
+                    onClick={() => setCurrentPage(p)}
+                  >
+                    {p}
+                  </Button>
+                ));
+              })()}
+            </div>
 
             <Button
               variant="outline"
               size="icon"
+              className="h-8 w-8"
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
             >

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +36,7 @@ import {
   Trash2,
   Eye,
   CalendarDays,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -65,6 +67,7 @@ interface Class {
 export default function Classes() {
   const [classes, setClasses] = useState<Class[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState('');
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -195,71 +198,71 @@ export default function Classes() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Courses</h1>
-          <p className="text-muted-foreground">Manage course schedules and locations</p>
+          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-br from-foreground to-muted-foreground bg-clip-text text-transparent">Courses</h1>
+          <p className="text-sm text-muted-foreground mt-1">Manage course schedules and locations</p>
         </div>
-        <Button onClick={() => setIsDialogOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
+        <Button size={isMobile ? "sm" : "default"} className="w-full sm:w-auto gap-2 shadow-md hover:shadow-lg transition-all" onClick={() => setIsDialogOpen(true)}>
+          <Plus className="w-4 h-4" />
           Add Course
         </Button>
       </div>
 
       {/* Search Bar */}
-      <div className="relative max-w-sm">
+      <div className="relative w-full sm:max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
           placeholder="Search courses..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-9"
+          className="pl-9 w-full"
         />
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Courses</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">Total Courses</CardTitle>
+            <Calendar className="h-4 w-4 text-primary/60" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalClasses}</div>
-            <p className="text-xs text-muted-foreground">All time</p>
+            <div className="text-xl sm:text-2xl font-bold">{totalClasses}</div>
+            <p className="text-[10px] text-muted-foreground mt-0.5">All time</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Courses</CardTitle>
-            <GraduationCap className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">Active</CardTitle>
+            <GraduationCap className="h-4 w-4 text-green-600/60" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{activeClasses}</div>
-            <p className="text-xs text-muted-foreground">Currently running</p>
+            <div className="text-xl sm:text-2xl font-bold text-green-600">{activeClasses}</div>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Running</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Districts</CardTitle>
-            <MapPin className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">Districts</CardTitle>
+            <MapPin className="h-4 w-4 text-blue-600/60" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{uniqueDistricts}</div>
-            <p className="text-xs text-muted-foreground">Unique districts</p>
+            <div className="text-xl sm:text-2xl font-bold text-blue-600">{uniqueDistricts}</div>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Locations</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">Completed</CardTitle>
+            <Users className="h-4 w-4 text-purple-600/60" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{completedClasses}</div>
-            <p className="text-xs text-muted-foreground">Finished courses</p>
+            <div className="text-xl sm:text-2xl font-bold text-purple-600">{completedClasses}</div>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Finished</p>
           </CardContent>
         </Card>
       </div>
@@ -272,77 +275,157 @@ export default function Classes() {
             {filteredClasses.length} {filteredClasses.length === 1 ? 'course' : 'courses'} found
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0 sm:p-6">
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading courses...</div>
+            <div className="text-center py-12 text-muted-foreground">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2 text-primary/60" />
+              Loading courses...
+            </div>
           ) : filteredClasses.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-lg mx-4 sm:mx-0">
               {searchTerm ? 'No courses found matching your search.' : 'No courses yet. Add your first course!'}
             </div>
+          ) : !isMobile ? (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Course Name</TableHead>
+                    <TableHead>Academic Program</TableHead>
+                    <TableHead>Program Level</TableHead>
+                    <TableHead>District</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredClasses.map((classItem) => (
+                    <TableRow key={classItem.id} className="group hover:bg-muted/30 transition-colors">
+                      <TableCell className="font-semibold">{classItem.name}</TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          {classItem.courses
+                            ? `${classItem.courses.code} - ${classItem.courses.name}`
+                            : 'N/A'
+                          }
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {classItem.program_level ? (
+                          <Badge variant="outline" className="font-medium">{classItem.program_level}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground italic text-xs">Not set</span>
+                        )}
+                      </TableCell>
+                      <TableCell>{classItem.district || 'N/A'}</TableCell>
+                      <TableCell>
+                        <Badge variant={classItem.status === 'Active' ? 'default' : 'secondary'} className={classItem.status === 'Active' ? 'bg-green-500 hover:bg-green-600' : ''}>
+                          {classItem.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                            onClick={() => openViewDialog(classItem)}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                            onClick={() => openEditDialog(classItem)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => openDeleteDialog(classItem)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Course Name</TableHead>
-                  <TableHead>Academic Program</TableHead>
-                  <TableHead>Program Level</TableHead>
-                  <TableHead>District</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredClasses.map((classItem) => (
-                  <TableRow key={classItem.id}>
-                    <TableCell className="font-medium">{classItem.name}</TableCell>
-                    <TableCell>
-                      {classItem.courses
-                        ? `${classItem.courses.code} - ${classItem.courses.name}`
-                        : 'N/A'
-                      }
-                    </TableCell>
-                    <TableCell>
-                      {classItem.program_level ? (
-                        <Badge variant="outline">{classItem.program_level}</Badge>
-                      ) : (
-                        <span className="text-muted-foreground">Not set</span>
-                      )}
-                    </TableCell>
-                    <TableCell>{classItem.district || 'N/A'}</TableCell>
-                    <TableCell>
-                      <Badge variant={classItem.status === 'Active' ? 'default' : 'secondary'}>
+            <div className="grid grid-cols-1 gap-4 p-4">
+              {filteredClasses.map((classItem) => (
+                <Card key={classItem.id} className="group overflow-hidden border border-border/50 hover:border-primary/30 hover:shadow-md transition-all duration-300">
+                  <div className={`h-1.5 w-full ${classItem.status === 'Active' ? 'bg-green-500' : 'bg-muted'}`} />
+                  <CardContent className="p-4 space-y-4">
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="space-y-1 min-w-0">
+                        <h3 className="font-bold text-lg leading-tight truncate">
+                          {classItem.name}
+                        </h3>
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant="outline" className="text-[10px] font-mono py-0">
+                            {classItem.courses?.code || 'NO-CODE'}
+                          </Badge>
+                          {classItem.program_level && (
+                            <Badge variant="secondary" className="text-[10px] py-0">
+                              {classItem.program_level}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <Badge className={`shrink-0 text-[10px] font-bold uppercase ${classItem.status === 'Active' ? 'bg-green-100 text-green-700 hover:bg-green-100' : ''}`} variant={classItem.status === 'Active' ? 'default' : 'secondary'}>
                         {classItem.status}
                       </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 bg-muted/30 p-3 rounded-lg border border-border/30">
+                      <div className="space-y-1">
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">District</p>
+                        <p className="text-sm font-semibold truncate">{classItem.district || '-'}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Batch</p>
+                        <p className="text-sm font-semibold italic">{classItem.batch_number || '-'}</p>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 flex items-center justify-between gap-2">
+                      <Button
+                        className="flex-1 gap-2 font-bold shadow-sm"
+                        size="sm"
+                        onClick={() => openViewDialog(classItem)}
+                      >
+                        <Eye className="w-4 h-4" />
+                        View
+                      </Button>
+                      <div className="flex gap-1">
                         <Button
                           variant="ghost"
-                          size="sm"
-                          onClick={() => openViewDialog(classItem)}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
+                          size="icon"
+                          className="h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/10"
                           onClick={() => openEditDialog(classItem)}
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon"
+                          className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                           onClick={() => openDeleteDialog(classItem)}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>
