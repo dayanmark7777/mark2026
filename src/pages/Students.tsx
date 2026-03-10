@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   useStudents,
   useDeleteStudent,
@@ -69,6 +70,7 @@ import { toast } from "sonner";
 import { SRI_LANKAN_DISTRICTS } from "@/lib/constants";
 
 export function Students() {
+  const isMobile = useIsMobile();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
@@ -784,71 +786,133 @@ export function Students() {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Index Number</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>District</TableHead>
-                      <TableHead>Course</TableHead>
-                      <TableHead>Batch</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedStudents.map((student) => {
-                      const course = courses.find(
-                        (c) => c.id === student.academic_program,
-                      );
-                      return (
-                        <TableRow key={student.id}>
-                          <TableCell className="font-medium">
-                            {student.index_number}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col">
-                              <span className="font-medium">
-                                {student.full_name}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {student.whatsapp_number}
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {student.email}
-                          </TableCell>
-                          <TableCell>{student.district}</TableCell>
-                          <TableCell>
-                            {course ? (
-                              <span className="text-sm">{course.name}</span>
-                            ) : (
-                              <span className="text-sm text-muted-foreground">
-                                -
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {student.batch_number ? (
+              {!isMobile ? (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Index Number</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>District</TableHead>
+                        <TableHead>Course</TableHead>
+                        <TableHead>Batch</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedStudents.map((student) => {
+                        const course = courses.find(
+                          (c) => c.id === student.academic_program,
+                        );
+                        return (
+                          <TableRow key={student.id}>
+                            <TableCell className="font-medium">
+                              {student.index_number}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-col">
+                                <span className="font-medium">
+                                  {student.full_name}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {student.whatsapp_number}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {student.email}
+                            </TableCell>
+                            <TableCell>{student.district}</TableCell>
+                            <TableCell>
+                              {course ? (
+                                <span className="text-sm">{course.name}</span>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">
+                                  -
+                                </span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {student.batch_number ? (
+                                <span className="text-sm">
+                                  {student.batch_number}
+                                </span>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">
+                                  -
+                                </span>
+                              )}
+                            </TableCell>
+                            <TableCell>
                               <span className="text-sm">
-                                {student.batch_number}
+                                {student.participation_type}
                               </span>
-                            ) : (
-                              <span className="text-sm text-muted-foreground">
-                                -
+                            </TableCell>
+                            <TableCell>
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  student.status === "Active"
+                                    ? "bg-green-100 text-green-800"
+                                    : student.status === "Completed"
+                                      ? "bg-blue-100 text-blue-800"
+                                      : "bg-gray-100 text-gray-800"
+                                }`}
+                              >
+                                {student.status}
                               </span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-sm">
-                              {student.participation_type}
-                            </span>
-                          </TableCell>
-                          <TableCell>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleViewStudent(student)}
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEditStudent(student)}
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteClick(student)}
+                                >
+                                  <Trash2 className="w-4 h-4 text-destructive" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {paginatedStudents.map((student) => {
+                    const course = courses.find(
+                      (c) => c.id === student.academic_program,
+                    );
+                    return (
+                      <Card key={student.id} className="border border-muted">
+                        <CardContent className="p-4 space-y-3">
+                          <div className="flex justify-between items-start">
+                            <div className="space-y-1">
+                              <h3 className="font-bold text-base leading-tight">
+                                {student.full_name}
+                              </h3>
+                              <p className="text-xs text-muted-foreground font-mono">
+                                {student.index_number}
+                              </p>
+                            </div>
                             <span
                               className={`px-2 py-1 rounded-full text-xs font-medium ${
                                 student.status === "Active"
@@ -860,38 +924,79 @@ export function Students() {
                             >
                               {student.status}
                             </span>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-1">
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div className="space-y-0.5">
+                              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
+                                District
+                              </p>
+                              <p className="font-medium line-clamp-1">
+                                {student.district}
+                              </p>
+                            </div>
+                            <div className="space-y-0.5">
+                              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
+                                Course
+                              </p>
+                              <p className="font-medium line-clamp-1">
+                                {course?.name || "-"}
+                              </p>
+                            </div>
+                            <div className="space-y-0.5">
+                              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
+                                Batch
+                              </p>
+                              <p className="font-medium">
+                                {student.batch_number || "-"}
+                              </p>
+                            </div>
+                            <div className="space-y-0.5">
+                              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
+                                Participation
+                              </p>
+                              <p className="font-medium">
+                                {student.participation_type}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="pt-2 flex flex-col gap-2">
+                            <Button
+                              className="w-full gap-2 font-semibold"
+                              variant="outline"
+                              onClick={() => handleViewStudent(student)}
+                            >
+                              <Eye className="w-4 h-4" />
+                              View
+                            </Button>
+                            <div className="flex gap-2">
                               <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleViewStudent(student)}
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                              <Button
+                                className="flex-1 gap-2"
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleEditStudent(student)}
                               >
                                 <Edit2 className="w-4 h-4" />
+                                Edit
                               </Button>
                               <Button
+                                className="flex-1 gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleDeleteClick(student)}
                               >
-                                <Trash2 className="w-4 h-4 text-destructive" />
+                                <Trash2 className="w-4 h-4" />
+                                Delete
                               </Button>
                             </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
 
               {/* Pagination */}
               <div className="flex items-center justify-between pt-4">
