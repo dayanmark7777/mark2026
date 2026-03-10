@@ -43,17 +43,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                 </div>
             </div>
 
-            <div className="absolute left-1/2 -translate-x-1/2 flex flex-col md:flex-row items-center md:gap-2 px-3 py-1 md:py-1.5 bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-orange-500/10 border border-orange-500/20 rounded-full backdrop-blur-md shadow-sm">
-                <div className="flex items-center gap-2">
-                    <span className="relative flex h-2 w-2">
-                        <span className="animate-[ping_2s_ease-out_infinite] absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
-                    </span>
-                    <span className="text-xs font-bold uppercase tracking-wider bg-gradient-to-br from-orange-600 to-amber-600 dark:from-orange-400 dark:to-amber-400 bg-clip-text text-transparent">
-                        Beta Version
-                    </span>
-                </div>
-            </div>
+
 
             <div className="flex items-center gap-4">
                 <Button variant="ghost" size="icon">

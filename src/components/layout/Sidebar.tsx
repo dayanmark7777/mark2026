@@ -66,16 +66,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                         );
                     })}
                 </nav>
-                <div className="p-4 border-t border-border mt-auto shrink-0">
-                    <div className="flex flex-col items-center justify-center p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
-                        <div className="flex items-center gap-1.5">
-                            <div className="h-2 w-2 rounded-full bg-orange-500 animate-pulse" />
-                            <span className="text-xs font-semibold text-orange-600 dark:text-orange-400">
-                                Beta Version
-                            </span>
-                        </div>
-                    </div>
-                </div>
+
             </aside>
 
             {/* Mobile Overlay */}
