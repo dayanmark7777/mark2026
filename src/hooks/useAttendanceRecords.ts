@@ -94,7 +94,7 @@ export function useClassAttendanceHistory(classId?: string) {
         .order("attendance_date", { ascending: false });
 
       if (error) throw error;
-      return (data || []) as Pick<
+      return (data as any) as Pick<
         AttendanceRecord,
         "id" | "student_id" | "class_id" | "attendance_date" | "status" | "marked_by" | "created_at" | "students"
       >[];

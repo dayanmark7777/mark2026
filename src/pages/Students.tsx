@@ -64,7 +64,9 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
+  ChevronUp,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { AddStudentForm } from "@/components/forms/AddStudentForm";
 import { toast } from "sonner";
 import { SRI_LANKAN_DISTRICTS } from "@/lib/constants";
@@ -855,10 +857,10 @@ export function Students() {
                             <TableCell>
                               <span
                                 className={`px-2 py-1 rounded-full text-xs font-medium ${student.status === "Active"
-                                    ? "bg-green-100 text-green-800"
-                                    : student.status === "Completed"
-                                      ? "bg-blue-100 text-blue-800"
-                                      : "bg-gray-100 text-gray-800"
+                                  ? "bg-green-100 text-green-800"
+                                  : student.status === "Completed"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : "bg-gray-100 text-gray-800"
                                   }`}
                               >
                                 {student.status}
@@ -921,10 +923,10 @@ export function Students() {
                             </div>
                             <span
                               className={`shrink-0 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${student.status === "Active"
-                                  ? "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400"
-                                  : student.status === "Completed"
-                                    ? "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400"
-                                    : "bg-gray-100 text-gray-700 dark:bg-gray-500/10 dark:text-gray-400"
+                                ? "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400"
+                                : student.status === "Completed"
+                                  ? "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400"
+                                  : "bg-gray-100 text-gray-700 dark:bg-gray-500/10 dark:text-gray-400"
                                 }`}
                             >
                               {student.status}
