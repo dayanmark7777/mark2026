@@ -37,6 +37,7 @@ import {
   useClassAttendanceHistory,
 } from "@/hooks/useAttendanceRecords";
 import { useEnrollments } from "@/hooks/useEnrollments";
+import { useSchedules } from "@/hooks/useSchedules";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -116,6 +117,12 @@ export function AttendanceManagement() {
   const { data: attendanceRecords = [] } = useAttendanceRecords(
     selectedClassId,
     format(selectedDate, "yyyy-MM-dd"),
+  );
+
+  const { data: allSchedules = [] } = useSchedules();
+
+  const schedulesForSelectedDate = allSchedules.filter(
+    (s) => s.scheduled_date === format(selectedDate, "yyyy-MM-dd"),
   );
 
   const createSession = useCreateAttendanceSession();
@@ -556,8 +563,66 @@ export function AttendanceManagement() {
         </div>
       </div>
 
+      {/* Scheduled Sessions Today */}
+      {schedulesForSelectedDate.length > 0 && (
+        <div className="space-y-4 animate-in slide-in-from-top-4 duration-500">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="h-5 w-5 text-primary" />
+            <h2 className="text-lg font-semibold">Scheduled for {format(selectedDate, "MMMM d")}</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {schedulesForSelectedDate.map((schedule) => {
+              const isActive = activeSession && activeSession.class_id === schedule.class_id;
+
+              return (
+                <Card key={schedule.id} className={`overflow-hidden transition-all hover:shadow-md border-l-4 ${isActive ? 'border-l-green-500' : 'border-l-primary'}`}>
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="space-y-1">
+                        <p className="font-bold text-lg leading-tight">{schedule.classes?.name}</p>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <UserCheck className="h-3 w-3" />
+                          {schedule.lecturers?.name}
+                        </p>
+                      </div>
+                      <Badge variant="outline" className="font-mono text-[10px]">
+                        {schedule.start_time} - {schedule.end_time}
+                      </Badge>
+                    </div>
+
+                    <div className="mt-4 flex items-center justify-between gap-2">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Location</span>
+                        <span className="text-xs font-semibold">{schedule.location || "Online / TBA"}</span>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant={isActive ? "outline" : "default"}
+                        className={isActive ? "text-green-600 border-green-200" : ""}
+                        disabled={isActive}
+                        onClick={() => {
+                          setSelectedClassId(schedule.class_id);
+                          // Auto scroll to session controls can be added if needed
+                          window.scrollTo({ top: document.querySelector('#session-controls')?.getBoundingClientRect().top ?? 0 + window.scrollY - 100, behavior: 'smooth' });
+                        }}
+                      >
+                        {isActive ? (
+                          <><CheckCircle2 className="h-4 w-4 mr-2" /> Active</>
+                        ) : (
+                          <>Start Attendance</>
+                        )}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Top Toolbar */}
-      <Card>
+      <Card id="session-controls">
         <CardHeader>
           <CardTitle className="text-lg">Session Controls</CardTitle>
         </CardHeader>
@@ -823,8 +888,8 @@ export function AttendanceManagement() {
                                           <div
                                             key={idx}
                                             className={`w-1.5 h-3 rounded-t-[1px] ${item.status === 'Present' ? 'bg-green-500' :
-                                                item.status === 'Absent' ? 'bg-red-200' :
-                                                  item.status === 'Late' ? 'bg-yellow-400' : 'bg-blue-300'
+                                              item.status === 'Absent' ? 'bg-red-200' :
+                                                item.status === 'Late' ? 'bg-yellow-400' : 'bg-blue-300'
                                               }`}
                                           />
                                         ))}
