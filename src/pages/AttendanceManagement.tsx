@@ -106,10 +106,10 @@ export function AttendanceManagement() {
   const [isImporting, setIsImporting] = useState(false);
 
   // Hooks
-  const { data: sessions = [] } = useAttendanceSessions(
-    selectedClassId,
-    format(selectedDate, "yyyy-MM-dd"),
-  );
+  const { data: allSessions = [] } = useAttendanceSessions(selectedClassId);
+  const sessions = allSessions.filter(s => s.session_date === format(selectedDate, "yyyy-MM-dd"));
+  const activeSession = allSessions.find(s => s.is_active);
+
   const { data: enrollments = [] } = useEnrollments(selectedClassId);
   const { data: historyRecords = [], isLoading: isHistoryLoading } = useClassAttendanceHistory(
     selectedClassId || undefined,
@@ -186,6 +186,12 @@ export function AttendanceManagement() {
     }
 
     setSubjectError("");
+
+    if (activeSession) {
+      toast.error(`A session is already active for this class (started ${activeSession.session_date}). End it before starting a new one.`);
+      return;
+    }
+
     createSession.mutate({
       class_id: selectedClassId,
       session_date: format(selectedDate, "yyyy-MM-dd"),
