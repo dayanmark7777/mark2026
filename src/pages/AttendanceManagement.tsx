@@ -15,7 +15,10 @@ import {
   ChevronDown,
   ChevronUp,
   Upload,
+  BarChart3,
+  UserCheck,
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useClasses } from "@/hooks/useClasses";
@@ -52,6 +55,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { CustomDatePicker } from "@/components/ui/custom-date-picker";
 import {
   Table,
@@ -82,6 +86,7 @@ import { toast } from "sonner";
 
 export function AttendanceManagement() {
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const { data: classes = [] } = useClasses();
   const { data: courses = [] } = useCourses();
   const { data: students = [] } = useStudents();
@@ -322,6 +327,39 @@ export function AttendanceManagement() {
     toast.success("CSV exported successfully");
   };
 
+  // NEW: Calculate Student Analytics
+  const studentAnalytics = classStudents.map(student => {
+    const studentRecords = historyRecords.filter(r => r.student_id === student.id);
+    const presentCount = studentRecords.filter(r => r.status === "Present").length;
+    const totalSessions = new Set(historyRecords.map(r => r.attendance_date)).size;
+    const percentage = totalSessions > 0 ? Math.round((presentCount / totalSessions) * 100) : 0;
+
+    // Sort all unique dates to find recent ones
+    const allDates = Array.from(new Set(historyRecords.map(r => r.attendance_date))).sort((a, b) => b.localeCompare(a));
+    const recentDates = allDates.slice(0, 8); // Show last 8 sessions
+
+    // Map status for those dates
+    const sparkline = recentDates.map(date => {
+      const record = studentRecords.find(r => r.attendance_date === date);
+      return {
+        date,
+        status: record ? record.status : "Absent"
+      };
+    });
+
+    return {
+      id: student.id,
+      name: student.full_name,
+      index: student.index_number,
+      presentCount,
+      totalSessions,
+      percentage,
+      sparkline
+    };
+  }).sort((a, b) => b.percentage - a.percentage); // Sort by percentage descending
+
+  const analyticsMap = Object.fromEntries(studentAnalytics.map(s => [s.id, s]));
+
   const handleExportHistoryCSV = (date: string, records: any[]) => {
     const headers = ["Index Number", "Name", "Status", "Time", "Marked By"];
     const rows = records.map((r) => [
@@ -509,8 +547,10 @@ export function AttendanceManagement() {
     <div className="space-y-6 animate-in fade-in-50 pb-10">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Attendance Log Book</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-br from-foreground to-muted-foreground bg-clip-text text-transparent">
+            Attendance Log Book
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
             View daily analytics and manage class log book records
           </p>
         </div>
@@ -678,390 +718,549 @@ export function AttendanceManagement() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Attendance Table */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Attendance Records</CardTitle>
-              <div className="flex gap-2">
-                <div className="relative w-48">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search student..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-8"
-                  />
+      <Tabs defaultValue="daily" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto sm:mx-0">
+          <TabsTrigger value="daily" className="flex items-center gap-2">
+            <CalendarDays className="h-4 w-4" />
+            <span className="hidden sm:inline">Daily Log</span>
+            <span className="sm:hidden">Entry</span>
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            <span className="hidden sm:inline">Student Analytics</span>
+            <span className="sm:hidden">Stats</span>
+          </TabsTrigger>
+          <TabsTrigger value="history" className="flex items-center gap-2">
+            <History className="h-4 w-4" />
+            <span className="hidden sm:inline">Session History</span>
+            <span className="sm:hidden">History</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="daily" className="space-y-6 animate-in slide-in-from-left-2 duration-300">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Main Attendance Table */}
+            <Card className="lg:col-span-2">
+              <CardHeader className="pb-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <CardTitle>Attendance Records</CardTitle>
+                  <div className="relative w-full sm:w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search student..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 w-full"
+                    />
+                  </div>
                 </div>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="mb-4 flex gap-2">
-              <Button
-                onClick={() => handleMarkAll("Present")}
-                size="sm"
-                variant="outline"
-              >
-                <CheckCircle2 className="h-4 w-4 mr-2" />
-                Mark All Present
-              </Button>
-              <Button
-                onClick={() => handleMarkAll("Absent")}
-                size="sm"
-                variant="outline"
-              >
-                <XCircle className="h-4 w-4 mr-2" />
-                Mark All Absent
-              </Button>
-            </div>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-4 flex flex-wrap gap-2">
+                  <Button
+                    onClick={() => handleMarkAll("Present")}
+                    size="sm"
+                    variant="outline"
+                    className="flex-1 sm:flex-none border-green-200 hover:bg-green-50 text-green-700 font-medium"
+                  >
+                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                    Mark All Present
+                  </Button>
+                  <Button
+                    onClick={() => handleMarkAll("Absent")}
+                    size="sm"
+                    variant="outline"
+                    className="flex-1 sm:flex-none border-red-200 hover:bg-red-50 text-red-700 font-medium"
+                  >
+                    <XCircle className="h-4 w-4 mr-2" />
+                    Mark All Absent
+                  </Button>
+                </div>
 
-            <div className="border rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    <TableHead className="w-12">#</TableHead>
-                    <TableHead>Index</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredStudents.length === 0 ? (
-                    <TableRow>
-                      <TableCell
-                        colSpan={5}
-                        className="text-center py-8 text-muted-foreground"
-                      >
-                        No students enrolled or found
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredStudents.map((student, idx) => {
-                      const record = attendanceRecords.find(
-                        (r) => r.student_id === student.id,
-                      );
-                      const status =
-                        (attendanceMap[student.id] as string) || "Not Marked";
+                <div className="border rounded-lg overflow-hidden bg-background shadow-sm">
+                  {!isMobile ? (
+                    <Table>
+                      <TableHeader className="bg-muted/50">
+                        <TableRow>
+                          <TableHead className="w-12 text-center">#</TableHead>
+                          <TableHead>Student Details</TableHead>
+                          <TableHead className="hidden md:table-cell">Attendance %</TableHead>
+                          <TableHead>Attendance Status</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredStudents.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={4} className="text-center py-12 text-muted-foreground italic">
+                              No students enrolled or found matching your search.
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          filteredStudents.map((student, idx) => {
+                            const record = attendanceRecords.find((r) => r.student_id === student.id);
+                            const status = (attendanceMap[student.id] as string) || "Not Marked";
 
-                      return (
-                        <TableRow key={student.id}>
-                          <TableCell className="text-muted-foreground">
-                            {idx + 1}
-                          </TableCell>
-                          <TableCell className="font-mono text-sm">
-                            {student.index_number}
-                          </TableCell>
-                          <TableCell>{student.full_name}</TableCell>
-                          <TableCell>
-                            <Select
-                              value={status}
-                              onValueChange={(value) =>
-                                handleMark(student.id, value)
-                              }
-                            >
-                              <SelectTrigger className="w-32">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Present">
-                                  <span className="text-green-600">
-                                    Present
-                                  </span>
-                                </SelectItem>
-                                <SelectItem value="Absent">
-                                  <span className="text-red-600">Absent</span>
-                                </SelectItem>
-                                <SelectItem value="Late">
-                                  <span className="text-yellow-600">Late</span>
-                                </SelectItem>
-                                <SelectItem value="Excused">
-                                  <span className="text-blue-600">Excused</span>
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {record && (
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm">
-                                    <MoreVertical className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem
-                                    onClick={() =>
-                                      setDeleteConfirmId(record.id)
-                                    }
-                                    className="text-destructive"
+                            return (
+                              <TableRow key={student.id} className="hover:bg-muted/20 transition-colors">
+                                <TableCell className="text-center text-muted-foreground font-mono text-xs">
+                                  {idx + 1}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex flex-col">
+                                    <span className="font-semibold">{student.full_name}</span>
+                                    <span className="text-xs text-muted-foreground font-mono">{student.index_number}</span>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="hidden md:table-cell">
+                                  {analyticsMap[student.id] && (
+                                    <div className="flex flex-col gap-1">
+                                      <span className={`text-[10px] font-bold ${analyticsMap[student.id].percentage >= 80 ? 'text-green-600' : 'text-red-500'}`}>
+                                        {analyticsMap[student.id].percentage}%
+                                      </span>
+                                      <div className="flex gap-0.5">
+                                        {analyticsMap[student.id].sparkline.slice(0, 5).map((item, idx) => (
+                                          <div
+                                            key={idx}
+                                            className={`w-1.5 h-3 rounded-t-[1px] ${item.status === 'Present' ? 'bg-green-500' :
+                                                item.status === 'Absent' ? 'bg-red-200' :
+                                                  item.status === 'Late' ? 'bg-yellow-400' : 'bg-blue-300'
+                                              }`}
+                                          />
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  <Select
+                                    value={status}
+                                    onValueChange={(value) => handleMark(student.id, value)}
                                   >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            )}
+                                    <SelectTrigger className={`w-36 h-9 font-medium shadow-none border-${status === 'Present' ? 'green' : status === 'Absent' ? 'red' : 'input'}-200`}>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="Present">
+                                        <div className="flex items-center gap-2 text-green-600">
+                                          <CheckCircle2 className="h-4 w-4" /> Present
+                                        </div>
+                                      </SelectItem>
+                                      <SelectItem value="Absent">
+                                        <div className="flex items-center gap-2 text-red-600">
+                                          <XCircle className="h-4 w-4" /> Absent
+                                        </div>
+                                      </SelectItem>
+                                      <SelectItem value="Late">
+                                        <div className="flex items-center gap-2 text-yellow-600">
+                                          <Play className="h-4 w-4 rotate-90" /> Late
+                                        </div>
+                                      </SelectItem>
+                                      <SelectItem value="Excused">
+                                        <div className="flex items-center gap-2 text-blue-600">
+                                          <CheckCircle2 className="h-4 w-4 opacity-50" /> Excused
+                                        </div>
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  {record && (
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                          <MoreVertical className="h-4 w-4" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                        <DropdownMenuItem
+                                          onClick={() => setDeleteConfirmId(record.id)}
+                                          className="text-destructive font-medium"
+                                        >
+                                          <Trash2 className="h-4 w-4 mr-2" />
+                                          Delete Record
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })
+                        )}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-4 p-4">
+                      {filteredStudents.map((student, idx) => {
+                        const status = (attendanceMap[student.id] as string) || "Not Marked";
+                        return (
+                          <div key={student.id} className="flex flex-col gap-3 p-3 border rounded-lg bg-card">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-bold text-sm truncate">{student.full_name}</p>
+                                <p className="text-[10px] text-muted-foreground font-mono">{student.index_number}</p>
+                              </div>
+                              <span className="text-[10px] text-muted-foreground font-mono">#{idx + 1}</span>
+                            </div>
+                            <div className="flex items-center justify-between gap-3">
+                              <Select
+                                value={status}
+                                onValueChange={(value) => handleMark(student.id, value)}
+                              >
+                                <SelectTrigger className="flex-1 h-9 bg-muted/30">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Present"><span className="text-green-600 font-medium text-xs">Present</span></SelectItem>
+                                  <SelectItem value="Absent"><span className="text-red-600 font-medium text-xs">Absent</span></SelectItem>
+                                  <SelectItem value="Late"><span className="text-yellow-600 font-medium text-xs">Late</span></SelectItem>
+                                  <SelectItem value="Excused"><span className="text-blue-600 font-medium text-xs">Excused</span></SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="space-y-6">
+              {/* Coordinator Check-In */}
+              <Card className="h-fit shadow-md border-t-4 border-t-primary/60">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <UserCheck className="h-5 w-5 text-primary" />
+                    Mark by Coordinator
+                  </CardTitle>
+                  <CardDescription>Enter Student Index Number to mark present</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {activeSession ? (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="index-number" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Index Number</Label>
+                        <Input
+                          id="index-number"
+                          placeholder="e.g. 2024NIC001"
+                          value={studentIndexInput}
+                          onChange={(e) => setStudentIndexInput(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === "Enter") handleStudentCheckIn();
+                          }}
+                          className="font-mono text-center tracking-widest text-lg"
+                        />
+                      </div>
+                      <Button
+                        onClick={handleStudentCheckIn}
+                        className="w-full font-bold shadow-sm"
+                        disabled={createAttendance.isPending}
+                      >
+                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                        SUBMIT ATTENDANCE
+                      </Button>
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-10 px-4 bg-muted/20 rounded-lg border border-dashed text-center">
+                      <Play className="h-8 w-8 text-muted-foreground opacity-20 mb-3" />
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Wait for lecturer to start a session to enable manual marking.
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Export & Import Section */}
+              <Card className="shadow-sm">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Upload className="h-4 w-4 text-muted-foreground" />
+                    Data Operations
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex flex-col gap-2">
+                    <input
+                      type="file"
+                      accept=".csv"
+                      ref={fileInputRef}
+                      onChange={handleFileSelected}
+                      className="hidden"
+                    />
+                    <Button onClick={handleImportCSVClick} variant="outline" size="sm" className="w-full justify-start h-10 px-4" disabled={isImporting}>
+                      {isImporting ? (
+                        <div className="flex items-center">
+                          <span className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin mr-2" />
+                          Importing...
+                        </div>
+                      ) : (
+                        <>
+                          <Upload className="h-4 w-4 mr-2 text-primary" />
+                          Import via CSV
+                        </>
+                      )}
+                    </Button>
+                    <Button onClick={handleExportCSV} variant="outline" size="sm" className="w-full justify-start h-10 px-4" disabled={filteredStudents.length === 0}>
+                      <Download className="h-4 w-4 mr-2 text-blue-500" />
+                      Export Current Sheet
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-6 animate-in fade-in duration-300">
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <CardTitle>Individual Student Performance</CardTitle>
+                  <CardDescription>Aggregate attendance across all class sessions</CardDescription>
+                </div>
+                <Badge variant="outline" className="font-mono">
+                  {new Set(historyRecords.map(r => r.attendance_date)).size} Total Sessions
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0 sm:p-6">
+              <div className="border rounded-lg overflow-hidden bg-background">
+                <Table>
+                  <TableHeader className="bg-muted/50">
+                    <TableRow>
+                      <TableHead className="w-12 text-center">#</TableHead>
+                      <TableHead>Student</TableHead>
+                      <TableHead>Attended</TableHead>
+                      <TableHead>Percent</TableHead>
+                      {!isMobile && <TableHead>Recent Pattern</TableHead>}
+                      <TableHead className="text-right">Grade</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {studentAnalytics.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-12 text-muted-foreground italic">
+                          No session data available for analytics yet.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      studentAnalytics.map((s, i) => (
+                        <TableRow key={s.id} className="hover:bg-muted/10">
+                          <TableCell className="text-center font-mono text-xs text-muted-foreground">{i + 1}</TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-sm">{s.name}</span>
+                              <span className="text-[10px] text-muted-foreground font-mono">{s.index}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-sm font-medium">
+                            {s.presentCount} / {s.totalSessions}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col gap-1 w-24">
+                              <div className="flex justify-between items-center text-[10px] font-bold">
+                                <span>{s.percentage}%</span>
+                              </div>
+                              <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full transition-all duration-500 ${s.percentage >= 80 ? 'bg-green-500' : s.percentage >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                                    }`}
+                                  style={{ width: `${s.percentage}%` }}
+                                />
+                              </div>
+                            </div>
+                          </TableCell>
+                          {!isMobile && (
+                            <TableCell>
+                              <div className="flex gap-0.5">
+                                {s.sparkline.length === 0 ? (
+                                  <span className="text-[10px] text-muted-foreground">no data</span>
+                                ) : (
+                                  s.sparkline.map((item, idx) => (
+                                    <div
+                                      key={idx}
+                                      title={`${item.date}: ${item.status}`}
+                                      className={`w-3 h-5 rounded-sm ${item.status === 'Present' ? 'bg-green-500' :
+                                        item.status === 'Absent' ? 'bg-red-200' :
+                                          item.status === 'Late' ? 'bg-yellow-400' : 'bg-blue-300'
+                                        }`}
+                                    />
+                                  ))
+                                )}
+                              </div>
+                            </TableCell>
+                          )}
+                          <TableCell className="text-right">
+                            <Badge
+                              variant={s.percentage >= 80 ? 'default' : s.percentage >= 50 ? 'secondary' : 'outline'}
+                              className={s.percentage >= 80 ? 'bg-green-100 text-green-700 hover:bg-green-100' : ''}
+                            >
+                              {s.percentage >= 80 ? 'Excellent' : s.percentage >= 60 ? 'Good' : s.percentage >= 40 ? 'Fair' : 'Poor'}
+                            </Badge>
                           </TableCell>
                         </TableRow>
-                      );
-                    })
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-        {/* Coordinator Check-In */}
-        <Card className="h-fit">
-          <CardHeader>
-            <CardTitle>Attendance Marking by Coordinator</CardTitle>
-            <CardDescription>Check in a student by Index Number</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {activeSession ? (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="index-number">Your Index Number</Label>
-                  <Input
-                    id="index-number"
-                    placeholder="Enter index number"
-                    value={studentIndexInput}
-                    onChange={(e) => setStudentIndexInput(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") handleStudentCheckIn();
-                    }}
-                  />
+        <TabsContent value="history" className="animate-in slide-in-from-right-2 duration-300">
+          {selectedClassId && (
+            <Card>
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <History className="h-5 w-5 text-primary/60" />
+                    <CardTitle>Session Logs</CardTitle>
+                  </div>
+                  <Badge variant="outline" className="bg-muted/30">
+                    Grouped by Date
+                  </Badge>
                 </div>
-                <Button
-                  onClick={handleStudentCheckIn}
-                  className="w-full"
-                  disabled={createAttendance.isPending}
-                >
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Submit Attendance
-                </Button>
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground text-center py-6">
-                No active session. Please wait for the lecturer to start a
-                session.
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+              </CardHeader>
+              <CardContent>
+                {isHistoryLoading ? (
+                  <div className="flex flex-col items-center justify-center py-20 gap-4">
+                    <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                    <p className="text-sm text-muted-foreground font-medium">Crunching history data...</p>
+                  </div>
+                ) : historyRecords.length === 0 ? (
+                  <div className="text-center py-16 bg-muted/20 rounded-xl border border-dashed">
+                    <History className="h-10 w-10 text-muted-foreground/30 mx-auto mb-4" />
+                    <p className="text-sm text-muted-foreground font-medium">No archived sessions found for this class.</p>
+                  </div>
+                ) : (() => {
+                  // Group records by date
+                  const byDate = historyRecords.reduce<Record<string, typeof historyRecords>>(
+                    (acc, r) => {
+                      const d = r.attendance_date;
+                      if (!acc[d]) acc[d] = [];
+                      acc[d].push(r);
+                      return acc;
+                    },
+                    {},
+                  );
+                  const sortedDates = Object.keys(byDate).sort((a, b) =>
+                    b.localeCompare(a),
+                  );
+                  return (
+                    <div className="grid grid-cols-1 gap-3">
+                      {sortedDates.map((date) => {
+                        const records = byDate[date];
+                        const present = records.filter((r) => r.status === "Present").length;
+                        const absent = records.filter((r) => r.status === "Absent").length;
+                        const total = records.length;
+                        const pct = total > 0 ? Math.round((present / total) * 100) : 0;
+                        const isExpanded = expandedHistoryDate === date;
 
-      {/* Export & Import Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Import & Export</CardTitle>
-          <CardDescription>Upload attendance from a CSV file or export current records</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-2">
-            <input
-              type="file"
-              accept=".csv"
-              ref={fileInputRef}
-              onChange={handleFileSelected}
-              className="hidden"
-            />
-            <Button onClick={handleImportCSVClick} variant="outline" disabled={isImporting}>
-              {isImporting ? (
-                <div className="flex items-center">
-                  <span className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin mr-2" />
-                  Importing...
-                </div>
-              ) : (
-                <>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Import from CSV
-                </>
-              )}
-            </Button>
-            <Button onClick={handleExportCSV} variant="outline" disabled={filteredStudents.length === 0}>
-              <Download className="h-4 w-4 mr-2" />
-              Export as CSV
-            </Button>
-          </div>
-          <div className="mt-4 text-xs text-muted-foreground">
-            <p><strong>Note for importing:</strong> The CSV must contain an <em>Index Number</em> and <em>Status</em> column. A <em>Notes</em> column is optional.</p>
-            <p>Valid statuses: Present, Absent, Late, Excused.</p>
-          </div>
-        </CardContent>
-      </Card>
+                        return (
+                          <div
+                            key={date}
+                            className={`border rounded-xl transition-all duration-300 overflow-hidden ${isExpanded ? 'ring-2 ring-primary/20 shadow-lg' : 'hover:border-primary/30'}`}
+                          >
+                            <div
+                              className={`flex items-center justify-between px-5 py-4 cursor-pointer select-none ${isExpanded ? 'bg-primary/5' : 'bg-card'}`}
+                              onClick={() => setExpandedHistoryDate(isExpanded ? null : date)}
+                            >
+                              <div className="flex items-center gap-4">
+                                <div className={`p-2.5 rounded-lg ${isExpanded ? 'bg-primary text-primary-foreground shadow-md' : 'bg-muted text-muted-foreground'}`}>
+                                  <CalendarDays className="h-5 w-5" />
+                                </div>
+                                <div className="space-y-0.5">
+                                  <p className="font-bold text-sm">
+                                    {format(new Date(date + "T00:00:00"), "EEEE, MMM d, yyyy")}
+                                  </p>
+                                  <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-tight text-muted-foreground/80">
+                                    <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> {present} Present</span>
+                                    <span className="flex items-center gap-1"><XCircle className="w-3 h-3 text-red-400" /> {absent} Absent</span>
+                                  </div>
+                                </div>
+                              </div>
 
-      {/* Attendance History */}
-      {selectedClassId && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <History className="h-5 w-5 text-muted-foreground" />
-              <CardTitle>Attendance History</CardTitle>
-            </div>
-            <CardDescription>
-              All recorded sessions for{" "}
-              {classes.find((c) => c.id === selectedClassId)?.name}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isHistoryLoading ? (
-              <p className="text-sm text-muted-foreground text-center py-6">
-                Loading history...
-              </p>
-            ) : historyRecords.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-6">
-                No attendance history found for this class.
-              </p>
-            ) : (() => {
-              // Group records by date
-              const byDate = historyRecords.reduce<Record<string, typeof historyRecords>>(
-                (acc, r) => {
-                  const d = r.attendance_date;
-                  if (!acc[d]) acc[d] = [];
-                  acc[d].push(r);
-                  return acc;
-                },
-                {},
-              );
-              const sortedDates = Object.keys(byDate).sort((a, b) =>
-                b.localeCompare(a),
-              );
-              return (
-                <div className="space-y-2">
-                  {sortedDates.map((date) => {
-                    const records = byDate[date];
-                    const present = records.filter((r) => r.status === "Present").length;
-                    const absent = records.filter((r) => r.status === "Absent").length;
-                    const late = records.filter((r) => r.status === "Late").length;
-                    const excused = records.filter((r) => r.status === "Excused").length;
-                    const total = records.length;
-                    const pct = total > 0 ? Math.round((present / total) * 100) : 0;
-                    const isExpanded = expandedHistoryDate === date;
-                    return (
-                      <div
-                        key={date}
-                        className="border rounded-lg overflow-hidden"
-                      >
-                        {/* Row header */}
-                        <button
-                          className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors text-left"
-                          onClick={() =>
-                            setExpandedHistoryDate(isExpanded ? null : date)
-                          }
-                        >
-                          <div className="flex items-center gap-3">
-                            <CalendarDays className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                            <span className="font-medium text-sm">
-                              {format(new Date(date + "T00:00:00"), "EEEE, MMMM d, yyyy")}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="hidden sm:flex items-center gap-3 text-xs mr-2">
-                              <span className="text-green-600 font-medium">{present} Present</span>
-                              <span className="text-red-500 font-medium">{absent} Absent</span>
-                              {late > 0 && <span className="text-yellow-500 font-medium">{late} Late</span>}
-                              {excused > 0 && <span className="text-blue-500 font-medium">{excused} Excused</span>}
-                              <span
-                                className={`px-2 py-0.5 rounded-full text-xs font-semibold ${pct >= 80
-                                  ? "bg-green-100 text-green-700"
-                                  : pct >= 50
-                                    ? "bg-yellow-100 text-yellow-700"
-                                    : "bg-red-100 text-red-700"
-                                  }`}
-                              >
-                                {pct}%
-                              </span>
+                              <div className="flex items-center gap-4">
+                                <div className="hidden sm:flex flex-col items-end gap-1 px-4 border-r">
+                                  <span className="text-xs font-bold">{pct}% Success</span>
+                                  <div className="w-16 h-1 bg-muted rounded-full overflow-hidden">
+                                    <div
+                                      className={`h-full ${pct >= 80 ? 'bg-green-500' : pct >= 50 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                      style={{ width: `${pct}%` }}
+                                    />
+                                  </div>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-10 w-10 p-0 text-muted-foreground hover:bg-muted"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleExportHistoryCSV(date, records);
+                                  }}
+                                >
+                                  <Download className="h-5 w-5" />
+                                </Button>
+                                {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                              </div>
                             </div>
 
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-muted-foreground hover:text-primary"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleExportHistoryCSV(date, records);
-                              }}
-                            >
-                              <Download className="h-4 w-4" />
-                            </Button>
-
-                            {isExpanded ? (
-                              <ChevronUp className="h-4 w-4 text-muted-foreground ml-1" />
-                            ) : (
-                              <ChevronDown className="h-4 w-4 text-muted-foreground ml-1" />
+                            {isExpanded && (
+                              <div className="bg-background/50 animate-in slide-in-from-top-1">
+                                <Table>
+                                  <TableHeader className="bg-muted/10">
+                                    <TableRow className="border-t">
+                                      <TableHead className="text-[10px] uppercase font-bold text-muted-foreground px-5 h-10">Student</TableHead>
+                                      <TableHead className="text-[10px] uppercase font-bold text-muted-foreground h-10">Status</TableHead>
+                                      <TableHead className="text-[10px] uppercase font-bold text-muted-foreground h-10">Marked By</TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {records.map((r) => (
+                                      <TableRow key={r.id} className="hover:bg-muted/5">
+                                        <TableCell className="px-5 py-3">
+                                          <div className="flex flex-col">
+                                            <span className="text-sm font-bold">{r.students?.full_name || "Unknown"}</span>
+                                            <span className="text-xs font-mono text-muted-foreground">{r.students?.index_number}</span>
+                                          </div>
+                                        </TableCell>
+                                        <TableCell className="py-3">
+                                          <Badge
+                                            variant="secondary"
+                                            className={`text-[10px] font-bold px-2 py-0 h-5 ${r.status === 'Present' ? 'bg-green-100 text-green-700' :
+                                              r.status === 'Absent' ? 'bg-red-100 text-red-700' :
+                                                r.status === 'Late' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700'
+                                              }`}
+                                          >
+                                            {r.status}
+                                          </Badge>
+                                        </TableCell>
+                                        <TableCell className="py-3 text-[10px] font-medium text-muted-foreground italic">
+                                          via {r.marked_by || "System"}
+                                        </TableCell>
+                                      </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                              </div>
                             )}
                           </div>
-                        </button>
-
-                        {/* Expanded detail */}
-                        {isExpanded && (
-                          <div className="border-t bg-muted/20">
-                            {/* Mobile stats */}
-                            <div className="flex sm:hidden gap-3 px-4 py-2 text-xs border-b">
-                              <span className="text-green-600 font-medium">{present} Present</span>
-                              <span className="text-red-500 font-medium">{absent} Absent</span>
-                              {late > 0 && <span className="text-yellow-500 font-medium">{late} Late</span>}
-                              {excused > 0 && <span className="text-blue-500 font-medium">{excused} Excused</span>}
-                              <span className="font-bold">{pct}%</span>
-                            </div>
-                            <Table>
-                              <TableHeader>
-                                <TableRow className="bg-muted/30">
-                                  <TableHead className="text-xs">Student Name</TableHead>
-                                  <TableHead className="text-xs">Status</TableHead>
-                                  <TableHead className="text-xs">Marked By</TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {records.map((r) => (
-                                  <TableRow key={r.id} className="text-sm">
-                                    <TableCell className="py-2">
-                                      <div className="flex flex-col">
-                                        <span className="font-medium text-xs">
-                                          {r.students?.full_name || "Unknown Student"}
-                                        </span>
-                                        <span className="text-[10px] text-muted-foreground font-mono">
-                                          {r.students?.index_number || r.student_id.slice(0, 8) + "..."}
-                                        </span>
-                                      </div>
-                                    </TableCell>
-                                    <TableCell className="py-2">
-                                      <span
-                                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${r.status === "Present"
-                                          ? "bg-green-100 text-green-700"
-                                          : r.status === "Absent"
-                                            ? "bg-red-100 text-red-700"
-                                            : r.status === "Late"
-                                              ? "bg-yellow-100 text-yellow-700"
-                                              : "bg-blue-100 text-blue-700"
-                                          }`}
-                                      >
-                                        {r.status}
-                                      </span>
-                                    </TableCell>
-                                    <TableCell className="text-muted-foreground text-xs py-2">
-                                      {r.marked_by || "—"}
-                                    </TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })()}
-          </CardContent>
-        </Card>
-      )}
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog
