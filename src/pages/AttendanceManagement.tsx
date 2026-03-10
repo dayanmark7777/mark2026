@@ -322,6 +322,32 @@ export function AttendanceManagement() {
     toast.success("CSV exported successfully");
   };
 
+  const handleExportHistoryCSV = (date: string, records: any[]) => {
+    const headers = ["Index Number", "Name", "Status", "Time", "Marked By"];
+    const rows = records.map((r) => [
+      r.students?.index_number || "-",
+      r.students?.full_name || "Unknown",
+      r.status,
+      r.created_at ? format(new Date(r.created_at), "HH:mm:ss") : "-",
+      r.marked_by || "—",
+    ]);
+
+    const csv = [
+      headers.join(","),
+      ...rows.map((r) => r.map((cell) => `"${cell}"`).join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const className = classes.find(c => c.id === selectedClassId)?.name || "Class";
+    a.download = `attendance-${className}-${date}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    toast.success(`Attendance for ${date} exported successfully`);
+  };
+
   // Import CSV
   const parseCSV = (text: string): string[][] => {
     const rows: string[][] = [];
@@ -934,27 +960,40 @@ export function AttendanceManagement() {
                               {format(new Date(date + "T00:00:00"), "EEEE, MMMM d, yyyy")}
                             </span>
                           </div>
-                          <div className="flex items-center gap-4">
-                            <div className="hidden sm:flex items-center gap-3 text-xs">
+                          <div className="flex items-center gap-2">
+                            <div className="hidden sm:flex items-center gap-3 text-xs mr-2">
                               <span className="text-green-600 font-medium">{present} Present</span>
                               <span className="text-red-500 font-medium">{absent} Absent</span>
                               {late > 0 && <span className="text-yellow-500 font-medium">{late} Late</span>}
                               {excused > 0 && <span className="text-blue-500 font-medium">{excused} Excused</span>}
                               <span
                                 className={`px-2 py-0.5 rounded-full text-xs font-semibold ${pct >= 80
-                                    ? "bg-green-100 text-green-700"
-                                    : pct >= 50
-                                      ? "bg-yellow-100 text-yellow-700"
-                                      : "bg-red-100 text-red-700"
+                                  ? "bg-green-100 text-green-700"
+                                  : pct >= 50
+                                    ? "bg-yellow-100 text-yellow-700"
+                                    : "bg-red-100 text-red-700"
                                   }`}
                               >
                                 {pct}%
                               </span>
                             </div>
+
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-primary"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleExportHistoryCSV(date, records);
+                              }}
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+
                             {isExpanded ? (
-                              <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                              <ChevronUp className="h-4 w-4 text-muted-foreground ml-1" />
                             ) : (
-                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                              <ChevronDown className="h-4 w-4 text-muted-foreground ml-1" />
                             )}
                           </div>
                         </button>
@@ -994,12 +1033,12 @@ export function AttendanceManagement() {
                                     <TableCell className="py-2">
                                       <span
                                         className={`px-2 py-0.5 rounded-full text-xs font-medium ${r.status === "Present"
-                                            ? "bg-green-100 text-green-700"
-                                            : r.status === "Absent"
-                                              ? "bg-red-100 text-red-700"
-                                              : r.status === "Late"
-                                                ? "bg-yellow-100 text-yellow-700"
-                                                : "bg-blue-100 text-blue-700"
+                                          ? "bg-green-100 text-green-700"
+                                          : r.status === "Absent"
+                                            ? "bg-red-100 text-red-700"
+                                            : r.status === "Late"
+                                              ? "bg-yellow-100 text-yellow-700"
+                                              : "bg-blue-100 text-blue-700"
                                           }`}
                                       >
                                         {r.status}
