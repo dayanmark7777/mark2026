@@ -83,7 +83,11 @@ export function useClassAttendanceHistory(classId?: string) {
           attendance_date,
           status,
           marked_by,
-          created_at
+          created_at,
+          students (
+            index_number,
+            full_name
+          )
         `,
         )
         .eq("class_id", classId!)
@@ -92,7 +96,7 @@ export function useClassAttendanceHistory(classId?: string) {
       if (error) throw error;
       return (data || []) as Pick<
         AttendanceRecord,
-        "id" | "student_id" | "class_id" | "attendance_date" | "status" | "marked_by" | "created_at"
+        "id" | "student_id" | "class_id" | "attendance_date" | "status" | "marked_by" | "created_at" | "students"
       >[];
     },
     enabled: !!classId,

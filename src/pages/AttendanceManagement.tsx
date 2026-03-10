@@ -329,32 +329,32 @@ export function AttendanceManagement() {
     let inQuotes = false;
     let row: string[] = [];
     for (let i = 0; i < text.length; i++) {
-        const ch = text[i];
-        if (inQuotes) {
-            if (ch === '"' && text[i + 1] === '"') {
-                current += '"';
-                i++;
-            } else if (ch === '"') {
-                inQuotes = false;
-            } else {
-                current += ch;
-            }
+      const ch = text[i];
+      if (inQuotes) {
+        if (ch === '"' && text[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else if (ch === '"') {
+          inQuotes = false;
         } else {
-            if (ch === '"') {
-                inQuotes = true;
-            } else if (ch === ",") {
-                row.push(current.trim());
-                current = "";
-            } else if (ch === "\n" || ch === "\r") {
-                if (ch === "\r" && text[i + 1] === "\n") i++;
-                row.push(current.trim());
-                current = "";
-                if (row.some((c) => c !== "")) rows.push(row);
-                row = [];
-            } else {
-                current += ch;
-            }
+          current += ch;
         }
+      } else {
+        if (ch === '"') {
+          inQuotes = true;
+        } else if (ch === ",") {
+          row.push(current.trim());
+          current = "";
+        } else if (ch === "\n" || ch === "\r") {
+          if (ch === "\r" && text[i + 1] === "\n") i++;
+          row.push(current.trim());
+          current = "";
+          if (row.some((c) => c !== "")) rows.push(row);
+          row = [];
+        } else {
+          current += ch;
+        }
+      }
     }
     row.push(current.trim());
     if (row.some((c) => c !== "")) rows.push(row);
@@ -393,7 +393,7 @@ export function AttendanceManagement() {
         }
 
         const headers = rows[0].map(h => h.toLowerCase().replace(/[\s_\-]+/g, " ").trim());
-        
+
         // Find relevant column indices
         const indexCol = headers.findIndex((h) => ["index number", "index no", "index", "student id"].includes(h));
         const statusCol = headers.findIndex((h) => ["status", "attendance", "state"].includes(h));
@@ -430,20 +430,20 @@ export function AttendanceManagement() {
           if (lStatus.includes("present") || lStatus === "true" || lStatus === "1" || lStatus === "p") parsedStatus = "Present";
           else if (lStatus.includes("late") || lStatus === "l") parsedStatus = "Late";
           else if (lStatus.includes("excuse") || lStatus === "e") parsedStatus = "Excused";
-          
+
           const existingRecord = attendanceRecords.find((r) => r.student_id === student.id);
-          
+
           try {
             if (existingRecord) {
               await supabase.from("attendance").update({ status: parsedStatus, notes: notesText || existingRecord.notes }).eq("id", existingRecord.id);
             } else {
               await supabase.from("attendance").insert([{
-                  student_id: student.id,
-                  class_id: selectedClassId,
-                  attendance_date: format(selectedDate, "yyyy-MM-dd"),
-                  status: parsedStatus,
-                  notes: notesText,
-                  marked_by: "CSV Import",
+                student_id: student.id,
+                class_id: selectedClassId,
+                attendance_date: format(selectedDate, "yyyy-MM-dd"),
+                status: parsedStatus,
+                notes: notesText,
+                marked_by: "CSV Import",
               }]);
             }
             successCount++;
@@ -454,7 +454,7 @@ export function AttendanceManagement() {
         }
 
         queryClient.invalidateQueries({ queryKey: ["attendance-records"] });
-        
+
         if (successCount > 0) {
           toast.success(`Successfully imported ${successCount} attendance records`);
         }
@@ -469,13 +469,13 @@ export function AttendanceManagement() {
         e.target.value = "";
       }
     };
-    
+
     reader.onerror = () => {
       toast.error("Failed to read file");
       setIsImporting(false);
       e.target.value = "";
     };
-    
+
     reader.readAsText(file);
   };
 
@@ -941,13 +941,12 @@ export function AttendanceManagement() {
                               {late > 0 && <span className="text-yellow-500 font-medium">{late} Late</span>}
                               {excused > 0 && <span className="text-blue-500 font-medium">{excused} Excused</span>}
                               <span
-                                className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                                  pct >= 80
+                                className={`px-2 py-0.5 rounded-full text-xs font-semibold ${pct >= 80
                                     ? "bg-green-100 text-green-700"
                                     : pct >= 50
-                                    ? "bg-yellow-100 text-yellow-700"
-                                    : "bg-red-100 text-red-700"
-                                }`}
+                                      ? "bg-yellow-100 text-yellow-700"
+                                      : "bg-red-100 text-red-700"
+                                  }`}
                               >
                                 {pct}%
                               </span>
@@ -974,7 +973,7 @@ export function AttendanceManagement() {
                             <Table>
                               <TableHeader>
                                 <TableRow className="bg-muted/30">
-                                  <TableHead className="text-xs">Student ID</TableHead>
+                                  <TableHead className="text-xs">Student Name</TableHead>
                                   <TableHead className="text-xs">Status</TableHead>
                                   <TableHead className="text-xs">Marked By</TableHead>
                                 </TableRow>
@@ -982,20 +981,26 @@ export function AttendanceManagement() {
                               <TableBody>
                                 {records.map((r) => (
                                   <TableRow key={r.id} className="text-sm">
-                                    <TableCell className="font-mono text-xs py-2">
-                                      {r.student_id.slice(0, 8)}...
+                                    <TableCell className="py-2">
+                                      <div className="flex flex-col">
+                                        <span className="font-medium text-xs">
+                                          {r.students?.full_name || "Unknown Student"}
+                                        </span>
+                                        <span className="text-[10px] text-muted-foreground font-mono">
+                                          {r.students?.index_number || r.student_id.slice(0, 8) + "..."}
+                                        </span>
+                                      </div>
                                     </TableCell>
                                     <TableCell className="py-2">
                                       <span
-                                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                                          r.status === "Present"
+                                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${r.status === "Present"
                                             ? "bg-green-100 text-green-700"
                                             : r.status === "Absent"
-                                            ? "bg-red-100 text-red-700"
-                                            : r.status === "Late"
-                                            ? "bg-yellow-100 text-yellow-700"
-                                            : "bg-blue-100 text-blue-700"
-                                        }`}
+                                              ? "bg-red-100 text-red-700"
+                                              : r.status === "Late"
+                                                ? "bg-yellow-100 text-yellow-700"
+                                                : "bg-blue-100 text-blue-700"
+                                          }`}
                                       >
                                         {r.status}
                                       </span>
